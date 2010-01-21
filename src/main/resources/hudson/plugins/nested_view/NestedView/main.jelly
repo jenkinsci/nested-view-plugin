@@ -1,0 +1,78 @@
+<!--
+The MIT License
+
+Copyright (c) 2004-2010, Sun Microsystems, Inc., Kohsuke Kawaguchi, Alan Harder
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <t:setIconSize/>
+  <div class="dashboard">
+    <!-- For compatibility with Hudson < 1.342..
+         remove this j:choose and just use st:include when only supporting 1.342+ -->
+    <j:choose>
+      <j:when test="${request.getView(it,'viewTabs.jelly')!=null}">
+        <st:include page="viewTabs.jelly" />
+      </j:when>
+      <j:otherwise>
+        <l:tabBar>
+          <j:forEach var="v" items="${it.owner.views}">
+            <l:tab name="${v.viewName}" active="${v==it}" href="${rootURL}/${v.url}" />
+          </j:forEach>
+          <j:if test="${it.hasPermission(it.CREATE)}">
+            <l:tab name="+" href="${rootURL}/${it.owner.url}newView" active="false" />
+          </j:if>
+        </l:tabBar>
+      </j:otherwise>
+    </j:choose>
+    <j:choose>
+      <j:when test="${empty(it.views)}">
+        <p>
+          ${%This view has no subviews associated with it.}
+          <j:if test="${it.hasPermission(it.CONFIGURE)}">
+            ${%AddSome('newView')}
+          </j:if>
+        </p>
+      </j:when>
+      <j:otherwise>
+        <!-- If a default subview is configured, NestedView.DefaultViewProxy will redirect..
+             otherwise show a list of the subviews (in a table, not tabs) -->
+        <table id="projectstatus" class="sortable pane bigtable"
+               style="margin-top:0; border-top:none">
+          <tr style="border-top:0">
+            <th width="1"></th>
+            <th width="*">${%View}</th>
+          </tr>
+          <j:forEach var="v" items="${it.views}">
+            <tr>
+              <td style="padding-left:5px">
+                <img src="${imagesURL}/${iconSize}/folder.gif" alt="" />
+              </td>
+              <td>
+                <a href="${rootURL}/${v.url}">${v.viewName}</a>
+              </td>
+            </tr>
+          </j:forEach>
+        </table>
+        <t:rssBar-with-iconSize/>
+      </j:otherwise>
+    </j:choose>
+  </div>
+</j:jelly>
