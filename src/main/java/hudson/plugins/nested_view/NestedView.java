@@ -26,25 +26,27 @@ package hudson.plugins.nested_view;
 import hudson.model.Descriptor.FormException;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.HealthReport;
 import hudson.model.Hudson;
 import hudson.model.Item;
+import hudson.model.Job;
 import hudson.model.TopLevelItem;
 import hudson.model.View;
 import hudson.model.ViewDescriptor;
 import hudson.model.ViewGroup;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.text.ParseException;
+import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerProxy;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 /**
  * View type that contains only another set of views.
@@ -128,6 +130,36 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
             save();
         } catch (ParseException e) {
             sendError(e,req,rsp);
+        }
+    }
+
+    public static HealthReportContainer getViewHealth(View view) {
+        int sum = 0, count = 0;
+        for (TopLevelItem item : view.getItems()) {
+            if (item instanceof Job) {
+                sum += ((Job)item).getBuildHealth().getScore();
+                count++;
+            }
+        }
+        return new HealthReportContainer(
+                count > 0 ? new HealthReport(sum / count, Messages._ViewHealth(count))
+                          : new HealthReport(100, Messages._NoJobs()));
+    }
+
+    /**
+     * Container for HealthReport with two methods matching hudson.model.Job
+     * so we can pass this to f:healthReport jelly.
+     */
+    public static class HealthReportContainer {
+        private HealthReport report;
+        public HealthReportContainer(HealthReport report) {
+            this.report = report;
+        }
+        public HealthReport getBuildHealth() {
+            return report;
+        }
+        public List<HealthReport> getBuildHealthReports() {
+            return Collections.singletonList(report);
         }
     }
 
