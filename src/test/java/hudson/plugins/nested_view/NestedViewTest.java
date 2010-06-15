@@ -70,9 +70,10 @@ public class NestedViewTest extends HudsonTestCase {
         form = wc.goTo("view/test-nest/configure").getFormByName("viewConfig");
         List<HtmlOption> options = form.getSelectByName("defaultView").getOptions();
         assertEquals("", options.get(0).getValueAttribute());
-        assertEquals("subview", options.get(1).getValueAttribute());
-        assertEquals("suball", options.get(2).getValueAttribute());
-        assertEquals(3, options.size());  // "None" and 2 views; subnest should not be in list
+        assertEquals("suball", options.get(1).getValueAttribute());
+        assertEquals("subview", options.get(2).getValueAttribute());
+        // "None" and 2 views in alphabetical order; subnest should not be in list
+        assertEquals(3, options.size());
         options.get(1).setSelected(true);
         submit(form);
         // Verify redirect to default subview

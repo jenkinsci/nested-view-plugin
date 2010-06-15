@@ -38,6 +38,7 @@ import hudson.model.ViewGroup;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -100,7 +101,9 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     }
 
     public Collection<View> getViews() {
-        return Collections.unmodifiableList(views);
+        List<View> copy = new ArrayList<View>(views);
+        Collections.sort(copy, View.SORTER);
+        return copy;
     }
 
     public View getView(String name) {
