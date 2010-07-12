@@ -96,6 +96,10 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         defaultView = Util.fixEmpty(req.getParameter("defaultView"));
     }
 
+    public boolean canDelete(View view) {
+        return true;
+    }
+
     public void deleteView(View view) throws IOException {
         views.remove(view);
     }
