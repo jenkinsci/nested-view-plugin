@@ -25,7 +25,9 @@ THE SOFTWARE.
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <t:setIconSize/>
   <div class="dashboard">
-    <st:include page="viewTabs.jelly" />
+    <j:set var="views" value="${it.owner.views}" />
+    <j:set var="currentView" value="${it}" />
+    <st:include page="viewTabs.jelly" it="${it.viewsTabBar}" />
     <j:choose>
       <j:when test="${empty(it.views)}">
         <p>

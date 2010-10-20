@@ -34,10 +34,10 @@ import hudson.model.TopLevelItem;
 import hudson.model.View;
 import hudson.model.ViewDescriptor;
 import hudson.model.ViewGroup;
+import hudson.views.ViewsTabBar;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -131,13 +131,9 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
 
     public void doCreateView(StaplerRequest req, StaplerResponse rsp)
             throws IOException, ServletException, FormException {
-        try {
-            checkPermission(View.CREATE);
-            views.add(View.create(req,rsp,this));
-            save();
-        } catch (ParseException e) {
-            sendError(e,req,rsp);
-        }
+        checkPermission(View.CREATE);
+        views.add(View.create(req,rsp,this));
+        save();
     }
 
     public static HealthReportContainer getViewHealth(View view) {
@@ -151,6 +147,10 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         return new HealthReportContainer(
                 count > 0 ? new HealthReport(sum / count, Messages._ViewHealth(count))
                           : new HealthReport(100, Messages._NoJobs()));
+    }
+
+    public ViewsTabBar getViewsTabBar() {
+        return Hudson.getInstance().getViewsTabBar();
     }
 
     /**
