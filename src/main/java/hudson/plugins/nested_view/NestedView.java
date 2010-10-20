@@ -137,16 +137,25 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     }
 
     public static HealthReportContainer getViewHealth(View view) {
-        int sum = 0, count = 0;
-        for (TopLevelItem item : view.getItems()) {
-            if (item instanceof Job) {
-                sum += ((Job)item).getBuildHealth().getScore();
-                count++;
-            }
+        HealthReportContainer hrc = new HealthReportContainer();
+        healthCounter(hrc, view);
+        hrc.report = hrc.count > 0
+                   ? new HealthReport(hrc.sum / hrc.count, Messages._ViewHealth(hrc.count))
+                   : new HealthReport(100, Messages._NoJobs());
+        return hrc;
+    }
+
+    private static void healthCounter(HealthReportContainer hrc, View view) {
+        if (view instanceof NestedView) {
+            for (View v : ((NestedView)view).getViews())
+                healthCounter(hrc, v);
+        } else {
+            for (TopLevelItem item : view.getItems())
+                if (item instanceof Job) {
+                    hrc.sum += ((Job)item).getBuildHealth().getScore();
+                    hrc.count++;
+                }
         }
-        return new HealthReportContainer(
-                count > 0 ? new HealthReport(sum / count, Messages._ViewHealth(count))
-                          : new HealthReport(100, Messages._NoJobs()));
     }
 
     public ViewsTabBar getViewsTabBar() {
@@ -159,9 +168,8 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
      */
     public static class HealthReportContainer {
         private HealthReport report;
-        public HealthReportContainer(HealthReport report) {
-            this.report = report;
-        }
+        private int sum = 0, count = 0;
+        private HealthReportContainer() { }
         public HealthReport getBuildHealth() {
             return report;
         }
