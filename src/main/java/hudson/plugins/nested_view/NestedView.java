@@ -48,6 +48,7 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerProxy;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.export.Exported;
 
 /**
  * View type that contains only another set of views.
@@ -104,6 +105,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         views.remove(view);
     }
 
+    @Exported
     public Collection<View> getViews() {
         List<View> copy = new ArrayList<View>(views);
         Collections.sort(copy, View.SORTER);
