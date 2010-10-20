@@ -120,7 +120,9 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     }
 
     public View getDefaultView() {
-        return getView(defaultView);
+        // Don't allow default subview for a NestedView that is the Hudson default view..
+        // (you wouldn't see the other top level view tabs, as it'd always jump into subview)
+        return isDefault() ? null : getView(defaultView);
     }
 
     public void onViewRenamed(View view, String oldName, String newName) {
