@@ -33,7 +33,7 @@ THE SOFTWARE.
         <p>
           ${%This view has no subviews associated with it.}
           <j:if test="${it.hasPermission(it.CONFIGURE)}">
-            ${%AddSome('newView')}
+            <j:out value="${%AddSome('newView')}" />
           </j:if>
         </p>
       </j:when>
