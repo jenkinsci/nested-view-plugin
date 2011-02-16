@@ -54,7 +54,7 @@ import org.kohsuke.stapler.export.Exported;
  * View type that contains only another set of views.
  * Allows grouping job views into multiple levels instead of one big list of tabs.
  *
- * @author Alan.Harder@sun.com
+ * @author Alan Harder
  * @author Kohsuke Kawaguchi
  */
 public class NestedView extends View implements ViewGroup, StaplerProxy {
@@ -120,7 +120,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     }
 
     public View getDefaultView() {
-        // Don't allow default subview for a NestedView that is the Hudson default view..
+        // Don't allow default subview for a NestedView that is the Jenkins default view..
         // (you wouldn't see the other top level view tabs, as it'd always jump into subview)
         return isDefault() ? null : getView(defaultView);
     }

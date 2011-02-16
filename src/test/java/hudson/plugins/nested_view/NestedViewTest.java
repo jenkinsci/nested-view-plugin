@@ -30,8 +30,8 @@ import java.util.List;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 /**
- * Test interaction of nested-view plugin with Hudson core.
- * @author Alan.Harder@sun.com
+ * Test interaction of nested-view plugin with Jenkins core.
+ * @author Alan Harder
  */
 public class NestedViewTest extends HudsonTestCase {
 
