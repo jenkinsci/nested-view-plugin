@@ -32,6 +32,7 @@ import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.TopLevelItem;
 import hudson.model.View;
+import hudson.model.Result;
 import hudson.model.ViewDescriptor;
 import hudson.model.ViewGroup;
 import hudson.views.ViewsTabBar;
@@ -138,6 +139,24 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         checkPermission(View.CREATE);
         views.add(View.create(req,rsp,this));
         save();
+    }
+
+    public static Result getWorstResult(View view) {
+        Result result = Result.SUCCESS, check;
+        if (view instanceof NestedView) {
+            for (View v : ((NestedView)view).getViews()) {
+                if ((check = getWorstResult(v)).isWorseThan(result))
+                    result = check;
+            }
+        } else {
+            for (TopLevelItem item : view.getItems()) {
+                if (item instanceof Job) {
+                    if ((check = ((Job)item).getLastCompletedBuild().getResult()).isWorseThan(result))
+                        result = check;
+                }
+            }
+        }
+        return result;
     }
 
     public static HealthReportContainer getViewHealth(View view) {

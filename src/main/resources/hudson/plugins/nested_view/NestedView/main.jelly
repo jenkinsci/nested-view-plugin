@@ -44,14 +44,16 @@ THE SOFTWARE.
                style="margin-top:0; border-top:none">
           <tr style="border-top:0">
             <th width="1"></th>
-            <th width="1">${h.nbspIndent(iconSize)}W</th>
+            <th width="1" tooltip="${%StatusTooltip}">${h.nbspIndent(iconSize)}S</th>
+            <th width="1" tooltip="${%WeatherTooltip}">${h.nbspIndent(iconSize)}W</th>
             <th width="*">${%View}</th>
           </tr>
           <j:forEach var="v" items="${it.views}">
             <tr>
-              <td style="padding-left:5px">
+              <td style="padding-left:5px;width:20px">
                 <img src="${imagesURL}/${iconSize}/folder.gif" alt="" />
               </td>
+              <t:ballColorTd it="${it.getWorstResult(v).color}"/>
               <!-- Use a fake "job" to provide BuildHealth -->
               <t:buildHealth job="${it.getViewHealth(v)}" td="true"/>
               <td>
