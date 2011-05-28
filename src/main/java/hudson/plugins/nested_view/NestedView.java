@@ -23,6 +23,7 @@
  */
 package hudson.plugins.nested_view;
 
+import static hudson.Util.fixEmpty;
 import hudson.model.Descriptor.FormException;
 import hudson.Extension;
 import hudson.Util;
@@ -35,6 +36,7 @@ import hudson.model.View;
 import hudson.model.Result;
 import hudson.model.ViewDescriptor;
 import hudson.model.ViewGroup;
+import hudson.util.FormValidation;
 import hudson.views.ViewsTabBar;
 
 import javax.servlet.ServletException;
@@ -45,6 +47,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerProxy;
 import org.kohsuke.stapler.StaplerRequest;
@@ -85,6 +88,23 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     public Item doCreateItem(StaplerRequest req, StaplerResponse rsp)
             throws IOException, ServletException {
         return Hudson.getInstance().doCreateItem(req, rsp);
+    }
+    
+    /**
+     * <p>Copy of {@link Hudson#doViewExistsCheck(String)}</p>
+     * 
+     * Checks if a top-level view with the given name exists.
+     */
+    public FormValidation doViewExistsCheck(@QueryParameter String value) {
+        checkPermission(View.CREATE);
+
+        String view = fixEmpty(value);
+        if(view==null) return FormValidation.ok();
+
+        if(getView(view)==null)
+            return FormValidation.ok();
+        else
+            return FormValidation.error(hudson.model.Messages.Hudson_ViewAlreadyExists(view));
     }
 
     @Override
