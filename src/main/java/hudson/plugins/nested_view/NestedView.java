@@ -31,6 +31,7 @@ import hudson.model.Hudson;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.TopLevelItem;
+import hudson.model.Run;
 import hudson.model.View;
 import hudson.model.Result;
 import hudson.model.ViewDescriptor;
@@ -151,7 +152,8 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         } else {
             for (TopLevelItem item : view.getItems()) {
                 if (item instanceof Job) {
-                    if ((check = ((Job)item).getLastCompletedBuild().getResult()).isWorseThan(result))
+                    final Run lastCompletedBuild = ((Job)item).getLastCompletedBuild();
+                    if (lastCompletedBuild != null && (check = lastCompletedBuild.getResult()).isWorseThan(result))
                         result = check;
                 }
             }
