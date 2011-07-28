@@ -27,6 +27,7 @@ import static hudson.Util.fixEmpty;
 import hudson.model.Descriptor.FormException;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.AbstractProject;
 import hudson.model.HealthReport;
 import hudson.model.Hudson;
 import hudson.model.Item;
@@ -175,9 +176,11 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
             }
         } else {
             for (TopLevelItem item : view.getItems()) {
-                if (item instanceof Job) {
+                if (item instanceof Job && !(  // Skip disabled projects
+                      item instanceof AbstractProject && ((AbstractProject)item).isDisabled())) {
                     final Run lastCompletedBuild = ((Job)item).getLastCompletedBuild();
-                    if (lastCompletedBuild != null && (check = lastCompletedBuild.getResult()).isWorseThan(result))
+                    if (lastCompletedBuild != null
+                            && (check = lastCompletedBuild.getResult()).isWorseThan(result))
                         result = check;
                 }
             }

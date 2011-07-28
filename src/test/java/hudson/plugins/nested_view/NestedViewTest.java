@@ -26,10 +26,15 @@ package hudson.plugins.nested_view;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlOption;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.model.AllView;
+import hudson.model.Cause.UserCause;
+import hudson.model.FreeStyleProject;
 import hudson.model.ListView;
+import static hudson.model.Result.*;
 import hudson.util.FormValidation;
 import static hudson.util.FormValidation.Kind.*;
 import java.util.List;
+import org.jvnet.hudson.test.FailureBuilder;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 /**
@@ -85,6 +90,24 @@ public class NestedViewTest extends HudsonTestCase {
         // Verify link to add a subview for empty nested view
         page = wc.goTo("view/test-nest/view/subnest/");
         assertNotNull(page.getAnchorByHref("newView"));
+    }
+
+    public void testGetWorstResult() throws Exception {
+        NestedView view = new NestedView("test");
+        assertSame(SUCCESS, NestedView.getWorstResult(view));    // Empty
+        view.addView(new AllView("foo", view));
+        assertSame(SUCCESS, NestedView.getWorstResult(view));    // Empty
+        FreeStyleProject p = createFreeStyleProject();
+        assertSame(SUCCESS, NestedView.getWorstResult(view));    // Job not yet run
+        assertBuildStatusSuccess(p.scheduleBuild2(0, new UserCause()).get());
+        assertSame(SUCCESS, NestedView.getWorstResult(view));    // Job ran ok
+        FreeStyleProject bad = createFreeStyleProject();
+        bad.getBuildersList().add(new FailureBuilder());
+        assertSame(SUCCESS, NestedView.getWorstResult(view));    // New job not yet run
+        assertBuildStatus(FAILURE, bad.scheduleBuild2(0, new UserCause()).get());
+        assertSame(FAILURE, NestedView.getWorstResult(view));    // Job failed
+        bad.disable();
+        assertSame(SUCCESS, NestedView.getWorstResult(view));    // Ignore disabled job
     }
 
     public void testDoViewExistsCheck() {
