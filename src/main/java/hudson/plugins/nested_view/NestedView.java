@@ -1,7 +1,7 @@
 /*
  * The MIT License
  * 
- * Copyright (c) 2004-2010, Sun Microsystems, Inc., Kohsuke Kawaguchi, Alan Harder
+ * Copyright (c) 2004-2011, Sun Microsystems, Inc., Kohsuke Kawaguchi, Alan Harder
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -92,20 +92,14 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     }
     
     /**
-     * <p>Copy of {@link Hudson#doViewExistsCheck(String)}</p>
-     * 
-     * Checks if a top-level view with the given name exists.
+     * Checks if a nested view with the given name exists.
      */
     public FormValidation doViewExistsCheck(@QueryParameter String value) {
         checkPermission(View.CREATE);
 
         String view = fixEmpty(value);
-        if(view==null) return FormValidation.ok();
-
-        if(getView(view)==null)
-            return FormValidation.ok();
-        else
-            return FormValidation.error(hudson.model.Messages.Hudson_ViewAlreadyExists(view));
+        return (view == null || getView(view) == null) ? FormValidation.ok()
+          : FormValidation.error(hudson.model.Messages.Hudson_ViewAlreadyExists(view));
     }
 
     @Override
@@ -136,7 +130,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
 
     public View getView(String name) {
         for (View v : views)
-            if(v.getViewName().equals(name))
+            if (v.getViewName().equals(name))
                 return v;
         return null;
     }
