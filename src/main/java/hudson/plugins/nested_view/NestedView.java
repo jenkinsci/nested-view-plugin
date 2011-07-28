@@ -152,8 +152,18 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     public void doCreateView(StaplerRequest req, StaplerResponse rsp)
             throws IOException, ServletException, FormException {
         checkPermission(View.CREATE);
-        views.add(View.create(req,rsp,this));
+        addView(View.create(req, rsp, this));
         save();
+    }
+
+    // Method for testing
+    void addView(View view) {
+        views.add(view);
+    }
+
+    // Method for testing
+    void setOwner(ViewGroup owner) {
+        this.owner = owner;
     }
 
     public static Result getWorstResult(View view) {

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2004-2010, Sun Microsystems, Inc., Alan Harder
+ * Copyright (c) 2004-2011, Sun Microsystems, Inc., Alan Harder
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,9 @@ package hudson.plugins.nested_view;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlOption;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.model.ListView;
+import hudson.util.FormValidation;
+import static hudson.util.FormValidation.Kind.*;
 import java.util.List;
 import org.jvnet.hudson.test.HudsonTestCase;
 
@@ -82,5 +85,15 @@ public class NestedViewTest extends HudsonTestCase {
         // Verify link to add a subview for empty nested view
         page = wc.goTo("view/test-nest/view/subnest/");
         assertNotNull(page.getAnchorByHref("newView"));
+    }
+
+    public void testDoViewExistsCheck() {
+        NestedView view = new NestedView("test");
+        view.setOwner(hudson);
+        view.addView(new ListView("foo", view));
+        assertSame(OK, view.doViewExistsCheck(null).kind);
+        assertSame(OK, view.doViewExistsCheck("").kind);
+        assertSame(OK, view.doViewExistsCheck("bar").kind);
+        assertSame(ERROR, view.doViewExistsCheck("foo").kind);
     }
 }
