@@ -1,7 +1,8 @@
 /*
  * The MIT License
  * 
- * Copyright (c) 2004-2011, Sun Microsystems, Inc., Kohsuke Kawaguchi, Alan Harder
+ * Copyright (c) 2004-2011, Sun Microsystems, Inc., Kohsuke Kawaguchi, Alan Harder,
+ * Manufacture Francaise des Pneumatiques Michelin, Romain Seguy
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -43,10 +44,14 @@ import hudson.views.ViewsTabBar;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -62,8 +67,11 @@ import org.kohsuke.stapler.export.Exported;
  *
  * @author Alan Harder
  * @author Kohsuke Kawaguchi
+ * @author Romain Seguy
  */
 public class NestedView extends View implements ViewGroup, StaplerProxy {
+    private final static Result WORST_RESULT = Result.ABORTED;
+
     /**
      * Nested views.
      */
@@ -167,46 +175,169 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         this.owner = owner;
     }
 
-    public static Result getWorstResult(View view) {
+    /**
+     * Returns the worst result for this nested view.
+     *
+     * <p>To get the worst result, this method browses all the jobs this view
+     * contains. Also, as soon as it finds the worst result possible (cf.
+     * {@link #WORST_RESULT}), the browsing stops.</p>
+     * <p>The algorithm first analyzes normal views (that is, views which are
+     * not nested ones); Then, in a second time, it processes nested views,
+     * hoping that {@link #WORST_RESULT} will be found as quick as possible, as
+     * mentionned previously.</p>
+     */
+    public Result getWorstResult() {
         Result result = Result.SUCCESS, check;
-        if (view instanceof NestedView) {
-            for (View v : ((NestedView)view).getViews()) {
-                if ((check = getWorstResult(v)).isWorseThan(result))
-                    result = check;
+
+        List<View> normalViews = new ArrayList<View>();
+        List<NestedView> nestedViews = new ArrayList<NestedView>();
+
+        for (View v : views) {
+            if(v instanceof NestedView) {
+                nestedViews.add((NestedView) v);
             }
-        } else {
-            for (TopLevelItem item : view.getItems()) {
-                if (item instanceof Job && !(  // Skip disabled projects
-                      item instanceof AbstractProject && ((AbstractProject)item).isDisabled())) {
-                    final Run lastCompletedBuild = ((Job)item).getLastCompletedBuild();
-                    if (lastCompletedBuild != null
-                            && (check = lastCompletedBuild.getResult()).isWorseThan(result))
-                        result = check;
+            else {
+                normalViews.add(v);
+            }
+        }
+
+        // we process "normal" views first since it's likely faster to process
+        // them (no unknown nested hierarchy of views) and we may find the worst
+        // case (which stops the processing) faster
+        for (View v : normalViews) {
+            if ((check = getWorstResultForNormalView(v)).isWorseThan(result)) {
+                result = check;
+                if (result.isWorseOrEqualTo(WORST_RESULT)) {
+                    // cut the search if we find the worst possible case
+                    return result;
                 }
+            }
+        }
+
+        // nested views are processed in a second time
+        for (NestedView v : nestedViews) {
+            // notice that this algorithm is recursive: as such, if a job is present
+            // in several views, then it is processed several times (except if it
+            // has the worst result possible, in which case the algorithm ends)
+            // TODO: derecursify the algorithm to improve performance on complex views
+            if ((check = v.getWorstResult()).isWorseThan(result)) {
+                result = check;
+                if (result.isWorseOrEqualTo(WORST_RESULT)) {
+                    // as before, cut the search if we find the worst possible case
+                    return result;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns the worst result for a normal view, by browsing all the jobs it
+     * contains; As soon as {@link #WORST_RESULT} is found, the browsing stops.
+     */
+    private static Result getWorstResultForNormalView(View v) {
+        Result result = Result.SUCCESS, check;
+        for (TopLevelItem item : v.getItems()) {
+            if (item instanceof Job && !(  // Skip disabled projects
+                  item instanceof AbstractProject && ((AbstractProject)item).isDisabled())) {
+                final Run lastCompletedBuild = ((Job)item).getLastCompletedBuild();
+                if (lastCompletedBuild != null
+                        && (check = lastCompletedBuild.getResult()).isWorseThan(result))
+                    result = check;
+                    if (result.isWorseOrEqualTo(WORST_RESULT)) {
+                        // cut the search if we find the worst possible case
+                        return result;
+                    }
             }
         }
         return result;
     }
 
-    public static HealthReportContainer getViewHealth(View view) {
+    /**
+     * Returns the worst result for a view, wether is a normal view or a nested
+     * one.
+     * @see #getWorstResult()
+     * @see #getWorstResultForNormalView(hudson.model.View)
+     */
+    public static Result getWorstResult(View v) {
+        if (v instanceof NestedView) {
+            return ((NestedView) v).getWorstResult();
+        } else {
+            return getWorstResultForNormalView(v);
+        }
+    }
+
+    /**
+     * Returns the health of this nested view.
+     *
+     * <p>Notice that, if a job is contained in several sub-views of the current
+     * view, then it is taken into account only once to get accurate stats.</p>
+     * <p>This algorithm has been derecursified, hence the stack stuff.</p>
+     */
+    public HealthReportContainer getHealth() {
+        // we use a set to avoid taking into account several times the same job
+        // when computing the health
+        Set<TopLevelItem> items = new LinkedHashSet<TopLevelItem>(100);
+
+        // retrieve all jobs to analyze (using DFS)
+        Deque<View> viewsStack = new ArrayDeque<View>(20);
+        viewsStack.push(this);
+        do {
+            View currentView = viewsStack.pop();
+            if (currentView instanceof NestedView) {
+                for (View v : ((NestedView) currentView).views) {
+                    viewsStack.push(v);
+                }
+            }
+            else {
+                items.addAll(currentView.getItems());
+            }
+        } while (!viewsStack.isEmpty());
+
         HealthReportContainer hrc = new HealthReportContainer();
-        healthCounter(hrc, view);
+        for (TopLevelItem item : items) {
+            if (item instanceof Job) {
+                hrc.sum += ((Job)item).getBuildHealth().getScore();
+                hrc.count++;
+            }
+        }
+
+        hrc.report = hrc.count > 0
+                   ? new HealthReport(hrc.sum / hrc.count, Messages._ViewHealth(hrc.count))
+                   : new HealthReport(100, Messages._NoJobs());
+
+        return hrc;
+    }
+
+    /**
+     * Returns the health of a normal view.
+     */
+    private static HealthReportContainer getHealthForNormalView(View view) {
+        HealthReportContainer hrc = new HealthReportContainer();
+        for (TopLevelItem item : view.getItems()) {
+            if (item instanceof Job) {
+                hrc.sum += ((Job)item).getBuildHealth().getScore();
+                hrc.count++;
+            }
+        }
         hrc.report = hrc.count > 0
                    ? new HealthReport(hrc.sum / hrc.count, Messages._ViewHealth(hrc.count))
                    : new HealthReport(100, Messages._NoJobs());
         return hrc;
     }
 
-    private static void healthCounter(HealthReportContainer hrc, View view) {
-        if (view instanceof NestedView) {
-            for (View v : ((NestedView)view).getViews())
-                healthCounter(hrc, v);
-        } else {
-            for (TopLevelItem item : view.getItems())
-                if (item instanceof Job) {
-                    hrc.sum += ((Job)item).getBuildHealth().getScore();
-                    hrc.count++;
-                }
+    /**
+     * Returns the health of a view, wether it is a normal or a nested one.
+     * @see #getHealth()
+     * @see #getHealthForNormalView(hudson.model.View)
+     */
+    public static HealthReportContainer getViewHealth(View v) {
+        if (v instanceof NestedView) {
+            return ((NestedView) v).getHealth();
+        }
+        else {
+            return getHealthForNormalView(v);
         }
     }
 
