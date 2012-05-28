@@ -49,23 +49,23 @@ public class NestedViewTest extends HudsonTestCase {
         WebClient wc = new WebClient();
 
         // Create a new nested view
-        HtmlForm form = wc.goTo("newView").getFormByName("createView");
+        HtmlForm form = wc.goTo("newView").getFormByName("createItem");
         form.getInputByName("name").setValueAttribute("test-nest");
         form.getInputByValue("hudson.plugins.nested_view.NestedView").setChecked(true);
         submit(form);
         // Add some subviews
-        form = wc.goTo("view/test-nest/newView").getFormByName("createView");
+        form = wc.goTo("view/test-nest/newView").getFormByName("createItem");
         form.getInputByName("name").setValueAttribute("subview");
         form.getInputByValue("hudson.model.ListView").setChecked(true);
         form = submit(form).getFormByName("viewConfig");
         form.getInputByName("useincluderegex").setChecked(true);
         form.getInputByName("includeRegex").setValueAttribute("E.*");
         submit(form);
-        form = wc.goTo("view/test-nest/newView").getFormByName("createView");
+        form = wc.goTo("view/test-nest/newView").getFormByName("createItem");
         form.getInputByName("name").setValueAttribute("subnest");
         form.getInputByValue("hudson.plugins.nested_view.NestedView").setChecked(true);
         submit(form);
-        form = wc.goTo("view/test-nest/newView").getFormByName("createView");
+        form = wc.goTo("view/test-nest/newView").getFormByName("createItem");
         form.getInputByName("name").setValueAttribute("suball");
         form.getInputByValue("hudson.model.AllView").setChecked(true);
         submit(form);

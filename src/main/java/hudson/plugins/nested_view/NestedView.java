@@ -29,9 +29,11 @@ import hudson.model.Descriptor.FormException;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractProject;
+import hudson.model.Action;
 import hudson.model.HealthReport;
 import hudson.model.Hudson;
 import hudson.model.Item;
+import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.TopLevelItem;
 import hudson.model.Run;
@@ -93,6 +95,21 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
 
     public boolean contains(TopLevelItem item) {
         return false;
+    }
+
+    @Override
+    public View getPrimaryView() {
+        return null;
+    }
+
+    @Override
+    public ItemGroup<? extends TopLevelItem> getItemGroup() {
+        return Hudson.getInstance();
+    }
+
+    @Override
+    public List<Action> getViewActions() {
+        return Hudson.getInstance().getViewActions();
     }
 
     public Item doCreateItem(StaplerRequest req, StaplerResponse rsp)
