@@ -94,6 +94,7 @@ public class NestedViewTest extends HudsonTestCase {
 
     public void testGetWorstResult() throws Exception {
         NestedView view = new NestedView("test");
+        view.setOwner(hudson);
         assertSame(SUCCESS, NestedView.getWorstResult(view));    // Empty
         view.addView(new AllView("foo", view));
         assertSame(SUCCESS, NestedView.getWorstResult(view));    // Empty
