@@ -25,22 +25,11 @@
 package hudson.plugins.nested_view;
 
 import static hudson.Util.fixEmpty;
+
+import hudson.model.*;
 import hudson.model.Descriptor.FormException;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.AbstractProject;
-import hudson.model.Action;
-import hudson.model.HealthReport;
-import hudson.model.Hudson;
-import hudson.model.Item;
-import hudson.model.ItemGroup;
-import hudson.model.Job;
-import hudson.model.TopLevelItem;
-import hudson.model.Run;
-import hudson.model.View;
-import hudson.model.Result;
-import hudson.model.ViewDescriptor;
-import hudson.model.ViewGroup;
 import hudson.util.FormValidation;
 import hudson.views.ViewsTabBar;
 
@@ -55,12 +44,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerProxy;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+
+import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.Exported;
 
 /**
@@ -104,17 +89,21 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
 
     @Override
     public ItemGroup<? extends TopLevelItem> getItemGroup() {
-        return Hudson.getInstance();
+        return getOwnerItemGroup();
     }
 
     @Override
     public List<Action> getViewActions() {
-        return Hudson.getInstance().getViewActions();
+        return getOwner().getViewActions();
     }
 
     public Item doCreateItem(StaplerRequest req, StaplerResponse rsp)
             throws IOException, ServletException {
-        return Hudson.getInstance().doCreateItem(req, rsp);
+        ItemGroup itemGroup = getItemGroup();
+        if (itemGroup instanceof ModifiableItemGroup) {
+            return ((ModifiableItemGroup)itemGroup).doCreateItem(req, rsp);
+        }
+        return null;
     }
     
     /**
