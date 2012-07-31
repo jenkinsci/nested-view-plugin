@@ -95,11 +95,11 @@ public class NestedViewTest extends HudsonTestCase {
     public void testGetWorstResult() throws Exception {
         NestedView view = new NestedView("test");
         view.setOwner(hudson);
-        assertSame(SUCCESS, NestedView.getWorstResult(view));    // Empty
+        assertSame(null, NestedView.getWorstResult(view));    // Empty
         view.addView(new AllView("foo", view));
-        assertSame(SUCCESS, NestedView.getWorstResult(view));    // Empty
+        assertSame(null, NestedView.getWorstResult(view));    // Empty
         FreeStyleProject p = createFreeStyleProject();
-        assertSame(SUCCESS, NestedView.getWorstResult(view));    // Job not yet run
+        assertSame(null, NestedView.getWorstResult(view));    // Job not yet run
         assertBuildStatusSuccess(p.scheduleBuild2(0, new UserCause()).get());
         assertSame(SUCCESS, NestedView.getWorstResult(view));    // Job ran ok
         FreeStyleProject bad = createFreeStyleProject();

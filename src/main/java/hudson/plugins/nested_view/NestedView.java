@@ -194,6 +194,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
      */
     public Result getWorstResult() {
         Result result = Result.SUCCESS, check;
+        boolean found = false;
 
         List<View> normalViews = new ArrayList<View>();
         List<NestedView> nestedViews = new ArrayList<NestedView>();
@@ -211,11 +212,15 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         // them (no unknown nested hierarchy of views) and we may find the worst
         // case (which stops the processing) faster
         for (View v : normalViews) {
-            if ((check = getWorstResultForNormalView(v)).isWorseThan(result)) {
-                result = check;
-                if (result.isWorseOrEqualTo(WORST_RESULT)) {
-                    // cut the search if we find the worst possible case
-                    return result;
+            check = getWorstResultForNormalView(v);
+            if (check != null) {
+                found = true;
+                if (check.isWorseThan(result)) {
+                    result = check;
+                    if (result.isWorseOrEqualTo(WORST_RESULT)) {
+                        // cut the search if we find the worst possible case
+                        return result;
+                    }
                 }
             }
         }
@@ -226,38 +231,47 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
             // in several views, then it is processed several times (except if it
             // has the worst result possible, in which case the algorithm ends)
             // TODO: derecursify the algorithm to improve performance on complex views
-            if ((check = v.getWorstResult()).isWorseThan(result)) {
-                result = check;
-                if (result.isWorseOrEqualTo(WORST_RESULT)) {
-                    // as before, cut the search if we find the worst possible case
-                    return result;
+            check = v.getWorstResult();
+            found = true;
+            if (check != null) {
+                if (check.isWorseThan(result)) {
+                    result = check;
+                    if (result.isWorseOrEqualTo(WORST_RESULT)) {
+                        // as before, cut the search if we find the worst possible case
+                        return result;
+                    }
                 }
             }
         }
 
-        return result;
+        return found ? result : null;
     }
 
     /**
      * Returns the worst result for a normal view, by browsing all the jobs it
      * contains; As soon as {@link #WORST_RESULT} is found, the browsing stops.
+     * Returns null if no build occurred yet
      */
     private static Result getWorstResultForNormalView(View v) {
+        boolean found = false;
         Result result = Result.SUCCESS, check;
         for (TopLevelItem item : v.getItems()) {
             if (item instanceof Job && !(  // Skip disabled projects
                   item instanceof AbstractProject && ((AbstractProject)item).isDisabled())) {
                 final Run lastCompletedBuild = ((Job)item).getLastCompletedBuild();
-                if (lastCompletedBuild != null
-                        && (check = lastCompletedBuild.getResult()).isWorseThan(result))
-                    result = check;
-                    if (result.isWorseOrEqualTo(WORST_RESULT)) {
-                        // cut the search if we find the worst possible case
-                        return result;
+                if (lastCompletedBuild != null) {
+                    found = true;
+                    if ((check = lastCompletedBuild.getResult()).isWorseThan(result)) {
+                        result = check;
+                        if (result.isWorseOrEqualTo(WORST_RESULT)) {
+                            // cut the search if we find the worst possible case
+                            return result;
+                        }
                     }
+                }
             }
         }
-        return result;
+        return found ? result : null;
     }
 
     /**
@@ -323,13 +337,15 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         HealthReportContainer hrc = new HealthReportContainer();
         for (TopLevelItem item : view.getItems()) {
             if (item instanceof Job) {
-                hrc.sum += ((Job)item).getBuildHealth().getScore();
+                Job job = (Job) item;
+                if (job.getBuildHealthReports().isEmpty()) continue;
+                hrc.sum += job.getBuildHealth().getScore();
                 hrc.count++;
             }
         }
         hrc.report = hrc.count > 0
                    ? new HealthReport(hrc.sum / hrc.count, Messages._ViewHealth(hrc.count))
-                   : new HealthReport(100, Messages._NoJobs());
+                   : null;
         return hrc;
     }
 
@@ -363,7 +379,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
             return report;
         }
         public List<HealthReport> getBuildHealthReports() {
-            return Collections.singletonList(report);
+            return report != null ? Collections.singletonList(report) : Collections.<HealthReport>emptyList();
         }
     }
 
