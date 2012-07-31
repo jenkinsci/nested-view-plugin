@@ -28,6 +28,8 @@ THE SOFTWARE.
     <j:set var="views" value="${it.owner.views}" />
     <j:set var="currentView" value="${it}" />
     <st:include page="viewTabs.jelly" it="${it.viewsTabBar}" />
+    <j:getStatic var="grey" className="hudson.model.BallColor" field="GREY"/>
+
     <j:choose>
       <j:when test="${empty(it.views)}">
         <p>
@@ -53,7 +55,8 @@ THE SOFTWARE.
               <td style="padding-left:5px;width:20px">
                 <img src="${imagesURL}/${iconSize}/folder.gif" alt="" />
               </td>
-              <t:ballColorTd it="${it.getWorstResult(v).color}"/>
+              <j:set var="result" value="${it.getWorstResult(v)}"/>
+              <t:ballColorTd it="${result!=null ? result.color : grey}"/>
               <!-- Use a fake "job" to provide BuildHealth -->
               <t:buildHealth job="${it.getViewHealth(v)}" td="true"/>
               <td>
