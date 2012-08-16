@@ -10,7 +10,7 @@
     <artifactId>nested-view</artifactId>
     <packaging>hpi</packaging>
     <name>Nested View Plugin</name>
-    <version>1.9</version>
+    <version>1.10-SNAPSHOT</version>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Nested+View+Plugin</url>
 
     <developers>
