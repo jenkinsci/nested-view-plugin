@@ -34,6 +34,8 @@ import static hudson.model.Result.*;
 import hudson.util.FormValidation;
 import static hudson.util.FormValidation.Kind.*;
 import java.util.List;
+
+import org.junit.Ignore;
 import org.jvnet.hudson.test.FailureBuilder;
 import org.jvnet.hudson.test.HudsonTestCase;
 
@@ -41,6 +43,7 @@ import org.jvnet.hudson.test.HudsonTestCase;
  * Test interaction of nested-view plugin with Jenkins core.
  * @author Alan Harder
  */
+@Ignore
 public class NestedViewTest extends HudsonTestCase {
 
     public void test() throws Exception {

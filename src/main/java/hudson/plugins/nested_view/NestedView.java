@@ -24,29 +24,23 @@
  */
 package hudson.plugins.nested_view;
 
-import static hudson.Util.fixEmpty;
-
-import hudson.model.*;
-import hudson.model.Descriptor.FormException;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.*;
+import hudson.model.Descriptor.FormException;
+import hudson.util.DescribableList;
 import hudson.util.FormValidation;
+import hudson.views.ListViewColumn;
 import hudson.views.ViewsTabBar;
+import org.kohsuke.stapler.*;
+import org.kohsuke.stapler.export.Exported;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.kohsuke.stapler.*;
-import org.kohsuke.stapler.export.Exported;
+import static hudson.Util.fixEmpty;
 
 /**
  * View type that contains only another set of views.
@@ -68,6 +62,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
      * Name of the subview to show when this tree view is selected.  May be null/empty.
      */
     private String defaultView;
+    private AvailableColumns columns;
 
     @DataBoundConstructor
     public NestedView(String name) {
@@ -101,11 +96,11 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
             throws IOException, ServletException {
         ItemGroup itemGroup = getItemGroup();
         if (itemGroup instanceof ModifiableItemGroup) {
-            return ((ModifiableItemGroup)itemGroup).doCreateItem(req, rsp);
+            return ((ModifiableItemGroup) itemGroup).doCreateItem(req, rsp);
         }
         return null;
     }
-    
+
     /**
      * Checks if a nested view with the given name exists.
      */
@@ -114,18 +109,25 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
 
         String view = fixEmpty(value);
         return (view == null || getView(view) == null) ? FormValidation.ok()
-          : FormValidation.error(hudson.model.Messages.Hudson_ViewAlreadyExists(view));
+                : FormValidation.error(hudson.model.Messages.Hudson_ViewAlreadyExists(view));
     }
 
     @Override
     public synchronized void onJobRenamed(Item item, String oldName, String newName) {
         // forward to children
         for (View v : views)
-            v.onJobRenamed(item,oldName,newName);
+            v.onJobRenamed(item, oldName, newName);
     }
 
-    protected void submit(StaplerRequest req) throws IOException, ServletException, FormException {
+    protected synchronized void submit(StaplerRequest req) throws IOException, ServletException, FormException {
         defaultView = Util.fixEmpty(req.getParameter("defaultView"));
+        if (columns == null) {
+            columns = new AvailableColumns();
+        }
+        if (columns.getColumns() == null) {
+            columns.setColumns(new DescribableList<ListViewColumn, Descriptor<ListViewColumn>>(this));
+        }
+        columns.updateFromForm(req, req.getSubmittedForm(), "columnsToShow");
     }
 
     public boolean canDelete(View view) {
@@ -156,6 +158,10 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         return isDefault() ? null : getView(defaultView);
     }
 
+    public AvailableColumns getColumnsToShow() {
+        return columns;
+    }
+
     public void onViewRenamed(View view, String oldName, String newName) {
         // noop
     }
@@ -183,7 +189,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
 
     /**
      * Returns the worst result for this nested view.
-     *
+     * <p/>
      * <p>To get the worst result, this method browses all the jobs this view
      * contains. Also, as soon as it finds the worst result possible (cf.
      * {@link #WORST_RESULT}), the browsing stops.</p>
@@ -200,10 +206,9 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         List<NestedView> nestedViews = new ArrayList<NestedView>();
 
         for (View v : views) {
-            if(v instanceof NestedView) {
+            if (v instanceof NestedView) {
                 nestedViews.add((NestedView) v);
-            }
-            else {
+            } else {
                 normalViews.add(v);
             }
         }
@@ -257,8 +262,8 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         Result result = Result.SUCCESS, check;
         for (TopLevelItem item : v.getItems()) {
             if (item instanceof Job && !(  // Skip disabled projects
-                  item instanceof AbstractProject && ((AbstractProject)item).isDisabled())) {
-                final Run lastCompletedBuild = ((Job)item).getLastCompletedBuild();
+                    item instanceof AbstractProject && ((AbstractProject) item).isDisabled())) {
+                final Run lastCompletedBuild = ((Job) item).getLastCompletedBuild();
                 if (lastCompletedBuild != null) {
                     found = true;
                     if ((check = lastCompletedBuild.getResult()).isWorseThan(result)) {
@@ -277,6 +282,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     /**
      * Returns the worst result for a view, wether is a normal view or a nested
      * one.
+     *
      * @see #getWorstResult()
      * @see #getWorstResultForNormalView(hudson.model.View)
      */
@@ -290,7 +296,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
 
     /**
      * Returns the health of this nested view.
-     *
+     * <p/>
      * <p>Notice that, if a job is contained in several sub-views of the current
      * view, then it is taken into account only once to get accurate stats.</p>
      * <p>This algorithm has been derecursified, hence the stack stuff.</p>
@@ -309,8 +315,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
                 for (View v : ((NestedView) currentView).views) {
                     viewsStack.push(v);
                 }
-            }
-            else {
+            } else {
                 items.addAll(currentView.getItems());
             }
         } while (!viewsStack.isEmpty());
@@ -318,14 +323,14 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         HealthReportContainer hrc = new HealthReportContainer();
         for (TopLevelItem item : items) {
             if (item instanceof Job) {
-                hrc.sum += ((Job)item).getBuildHealth().getScore();
+                hrc.sum += ((Job) item).getBuildHealth().getScore();
                 hrc.count++;
             }
         }
 
         hrc.report = hrc.count > 0
-                   ? new HealthReport(hrc.sum / hrc.count, Messages._ViewHealth(hrc.count))
-                   : new HealthReport(100, Messages._NoJobs());
+                ? new HealthReport(hrc.sum / hrc.count, Messages._ViewHealth(hrc.count))
+                : new HealthReport(100, Messages._NoJobs());
 
         return hrc;
     }
@@ -344,21 +349,21 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
             }
         }
         hrc.report = hrc.count > 0
-                   ? new HealthReport(hrc.sum / hrc.count, Messages._ViewHealth(hrc.count))
-                   : null;
+                ? new HealthReport(hrc.sum / hrc.count, Messages._ViewHealth(hrc.count))
+                : null;
         return hrc;
     }
 
     /**
      * Returns the health of a view, wether it is a normal or a nested one.
+     *
      * @see #getHealth()
      * @see #getHealthForNormalView(hudson.model.View)
      */
     public static HealthReportContainer getViewHealth(View v) {
         if (v instanceof NestedView) {
             return ((NestedView) v).getHealth();
-        }
-        else {
+        } else {
             return getHealthForNormalView(v);
         }
     }
@@ -374,10 +379,14 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     public static class HealthReportContainer {
         private HealthReport report;
         private int sum = 0, count = 0;
-        private HealthReportContainer() { }
+
+        private HealthReportContainer() {
+        }
+
         public HealthReport getBuildHealth() {
             return report;
         }
+
         public List<HealthReport> getBuildHealthReports() {
             return report != null ? Collections.singletonList(report) : Collections.<HealthReport>emptyList();
         }
@@ -404,5 +413,6 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         public String getDisplayName() {
             return Messages.DisplayName();
         }
+
     }
 }
