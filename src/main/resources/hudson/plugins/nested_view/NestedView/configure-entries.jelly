@@ -40,7 +40,7 @@ THE SOFTWARE.
   </f:entry>
   </j:if>
   <f:section title="${%Columns}">
-    <j:invokeStatic var="allColumns" className="hudson.plugins.nested_view.AvailableColumns" method="nestedViewColumns"/>
+    <j:invokeStatic var="allColumns" className="hudson.plugins.nested_view.NestedViewColumns" method="getPossibleColumns"/>
     <f:block>
       <f:hetero-list name="columnsToShow" hasHeader="true"
                      descriptors="${allColumns}"

@@ -62,7 +62,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
      * Name of the subview to show when this tree view is selected.  May be null/empty.
      */
     private String defaultView;
-    private AvailableColumns columns;
+    private NestedViewColumns columns;
 
     @DataBoundConstructor
     public NestedView(String name) {
@@ -122,7 +122,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     protected synchronized void submit(StaplerRequest req) throws IOException, ServletException, FormException {
         defaultView = Util.fixEmpty(req.getParameter("defaultView"));
         if (columns == null) {
-            columns = new AvailableColumns();
+            columns = new NestedViewColumns();
         }
         if (columns.getColumns() == null) {
             columns.setColumns(new DescribableList<ListViewColumn, Descriptor<ListViewColumn>>(this));
@@ -158,7 +158,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         return isDefault() ? null : getView(defaultView);
     }
 
-    public AvailableColumns getColumnsToShow() {
+    public NestedViewColumns getColumnsToShow() {
         return columns;
     }
 

@@ -16,10 +16,16 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * @author sbashkyrtsev
+ * NestedView delegates things related to optional columns to this class.
+ *
+ * @author stanislav bashkirtsev
  */
-public class AvailableColumns {
+public class NestedViewColumns {
     private DescribableList<ListViewColumn, Descriptor<ListViewColumn>> columns;
+
+    public void updateFromForm(StaplerRequest req, JSONObject formData, String key) throws IOException, Descriptor.FormException {
+        columns.rebuildHetero(req, formData, getPossibleColumns(), key);
+    }
 
     public void setColumns(DescribableList<ListViewColumn, Descriptor<ListViewColumn>> columns) {
         this.columns = columns;
@@ -27,10 +33,6 @@ public class AvailableColumns {
 
     public DescribableList<ListViewColumn, Descriptor<ListViewColumn>> getColumns() {
         return columns;
-    }
-
-    public void updateFromForm(StaplerRequest req, JSONObject formData, String key) throws IOException, Descriptor.FormException {
-        columns.rebuildHetero(req, formData, nestedViewColumns(), key);
     }
 
     public boolean isShowStatusColumn() {
@@ -41,6 +43,10 @@ public class AvailableColumns {
         return containsColumnWithDescriptor(WeatherColumn.DescriptorImpl.class);
     }
 
+    public static List<Descriptor<ListViewColumn>> getPossibleColumns() {
+        return extractOptionalColumns(allViewColumns());
+    }
+
     private boolean containsColumnWithDescriptor(Class<? extends ListViewColumnDescriptor> descriptorClass) {
         for (ListViewColumn column : columns) {
             if (column.getDescriptor().getClass() == descriptorClass) {
@@ -48,10 +54,6 @@ public class AvailableColumns {
             }
         }
         return false;
-    }
-
-    public static List<Descriptor<ListViewColumn>> nestedViewColumns() {
-        return extractOptionalColumns(allViewColumns());
     }
 
     private static DescriptorExtensionList<ListViewColumn, Descriptor<ListViewColumn>> allViewColumns() {
