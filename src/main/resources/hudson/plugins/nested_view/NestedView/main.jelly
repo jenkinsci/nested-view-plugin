@@ -22,12 +22,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"
+         xmlns:t="/lib/hudson">
   <t:setIconSize/>
   <div class="dashboard">
-    <j:set var="views" value="${it.owner.views}" />
-    <j:set var="currentView" value="${it}" />
-    <st:include page="viewTabs.jelly" it="${it.viewsTabBar}" />
+    <j:set var="views" value="${it.owner.views}"/>
+    <j:set var="currentView" value="${it}"/>
+    <j:set var="optionalColumns" value="${it.columnsToShow}"/>
+    <st:include page="viewTabs.jelly" it="${it.viewsTabBar}"/>
     <j:getStatic var="grey" className="hudson.model.BallColor" field="GREY"/>
 
     <j:choose>
@@ -35,7 +37,7 @@ THE SOFTWARE.
         <p>
           ${%This view has no subviews associated with it.}
           <j:if test="${it.hasPermission(it.CONFIGURE)}">
-            <j:out value="${%AddSome('newView')}" />
+            <j:out value="${%AddSome('newView')}"/>
           </j:if>
         </p>
       </j:when>
@@ -46,19 +48,27 @@ THE SOFTWARE.
                style="margin-top:0; border-top:none">
           <tr style="border-top:0">
             <th width="1"></th>
-            <th width="1" tooltip="${%StatusTooltip}">${h.nbspIndent(iconSize)}S</th>
-            <th width="1" tooltip="${%WeatherTooltip}">${h.nbspIndent(iconSize)}W</th>
+            <j:if test="${optionalColumns.showStatusColumn}">
+              <th width="1" tooltip="${%StatusTooltip}">${h.nbspIndent(iconSize)}S</th>
+            </j:if>
+            <j:if test="${optionalColumns.showWeatherColumn}">
+              <th width="1" tooltip="${%WeatherTooltip}">${h.nbspIndent(iconSize)}W</th>
+            </j:if>
             <th width="*">${%View}</th>
           </tr>
           <j:forEach var="v" items="${it.views}">
             <tr>
               <td style="padding-left:5px;width:20px">
-                <img src="${imagesURL}/${iconSize}/folder.gif" alt="" />
+                <img src="${imagesURL}/${iconSize}/folder.gif" alt=""/>
               </td>
-              <j:set var="result" value="${it.getWorstResult(v)}"/>
-              <t:ballColorTd it="${result!=null ? result.color : grey}"/>
+              <j:if test="${optionalColumns.showStatusColumn}">
+                <j:set var="result" value="${it.getWorstResult(v)}"/>
+                <t:ballColorTd it="${result!=null ? result.color : grey}"/>
+              </j:if>
               <!-- Use a fake "job" to provide BuildHealth -->
-              <t:buildHealth job="${it.getViewHealth(v)}" td="true"/>
+              <j:if test="${optionalColumns.showWeatherColumn}">
+                <t:buildHealth job="${it.getViewHealth(v)}" td="true"/>
+              </j:if>
               <td>
                 <a href="${rootURL}/${v.url}">${v.viewName}</a>
               </td>

@@ -34,6 +34,8 @@ import static hudson.model.Result.*;
 import hudson.util.FormValidation;
 import static hudson.util.FormValidation.Kind.*;
 import java.util.List;
+
+import org.junit.Ignore;
 import org.jvnet.hudson.test.FailureBuilder;
 import org.jvnet.hudson.test.HudsonTestCase;
 
