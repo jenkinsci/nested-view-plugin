@@ -23,6 +23,7 @@ THE SOFTWARE.
 -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <!--<f:checkbox default="false" checked="${it.showWeatherColumn}" title="Show Weather Column" name="showWeatherColumn"/>-->
   <j:if test="${!it.isDefault()}">
   <f:entry title="${%Default subview}" help="/plugin/nested-view/help-defaultView.html">
     <select class="setting-input" name="defaultView">
@@ -38,4 +39,13 @@ THE SOFTWARE.
     </select>
   </f:entry>
   </j:if>
+  <f:section title="${%Columns}">
+    <j:invokeStatic var="allColumns" className="hudson.plugins.nested_view.NestedViewColumns" method="getPossibleColumns"/>
+    <f:block>
+      <f:hetero-list name="columnsToShow" hasHeader="true"
+                     descriptors="${allColumns}"
+                     items="${it.columnsToShow.columns}"
+                     addCaption="${%Add column}"/>
+    </f:block>
+  </f:section>
 </j:jelly>
