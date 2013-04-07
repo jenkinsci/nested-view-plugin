@@ -8,6 +8,7 @@
   </parent>
   <properties>
     <maven-release-plugin.version>2.4</maven-release-plugin.version>
+    <maven-hpi-plugin.version>1.95</maven-hpi-plugin.version>
   </properties>
 
   <artifactId>nested-view</artifactId>
