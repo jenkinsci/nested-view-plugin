@@ -46,11 +46,10 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-        </configuration>
+        <groupId>org.jenkins-ci.tools</groupId>
+        <artifactId>maven-hpi-plugin</artifactId>
+        <version>${maven-hpi-plugin.version}</version>
+        <extensions>true</extensions>
       </plugin>
     </plugins>
   </build>
