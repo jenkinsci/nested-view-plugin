@@ -102,6 +102,31 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     }
 
     /**
+     * Checks if a nested view with the given name exists and 
+     * make sure that the name is good as a view name.
+     */
+    public FormValidation doCheckViewName(@QueryParameter String value) {
+        checkPermission(View.CREATE);
+        
+        String name = fixEmpty(value);
+        if (name == null) 
+            return FormValidation.ok();
+        
+        // already exists?
+        if (getView(name) != null) 
+            return FormValidation.error(hudson.model.Messages.Hudson_ViewAlreadyExists(name));
+        
+        // good view name?
+        try {
+            jenkins.model.Jenkins.checkGoodName(name);
+        } catch (Failure e) {
+            return FormValidation.error(e.getMessage());
+        }
+
+        return FormValidation.ok();
+    }
+
+    /**
      * Checks if a nested view with the given name exists.
      */
     public FormValidation doViewExistsCheck(@QueryParameter String value) {
