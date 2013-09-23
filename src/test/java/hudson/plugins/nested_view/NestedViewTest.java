@@ -91,7 +91,7 @@ public class NestedViewTest extends HudsonTestCase {
         assertNotNull(page.getAnchorByHref("job/Efgh/"));
         // Verify link to add a subview for empty nested view
         page = wc.goTo("view/test-nest/view/subnest/");
-        assertNotNull(page.getAnchorByHref("newView"));
+        assertNotNull(page.getAnchorByHref("/view/test-nest/view/subnest/newView"));
     }
 
     public void testGetWorstResult() throws Exception {
