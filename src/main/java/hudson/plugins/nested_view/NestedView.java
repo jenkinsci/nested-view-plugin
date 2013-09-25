@@ -78,6 +78,11 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     }
 
     @Override
+    public String getUrl() {
+        return getViewUrl();
+    }
+
+    @Override
     public View getPrimaryView() {
         return null;
     }
