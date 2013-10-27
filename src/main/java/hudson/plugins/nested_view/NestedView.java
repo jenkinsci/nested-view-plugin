@@ -51,7 +51,7 @@ import static hudson.Util.fixEmpty;
  * @author Romain Seguy
  */
 public class NestedView extends View implements ViewGroup, StaplerProxy {
-    private final static Result WORST_RESULT = Result.ABORTED;
+    private final static Result WORST_RESULT = Result.FAILURE;
 
     /**
      * Nested views.
@@ -289,14 +289,17 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
      */
     private static Result getWorstResultForNormalView(View v) {
         boolean found = false;
-        Result result = Result.SUCCESS, check;
+        Result result = Result.NOT_BUILT, check;
         for (TopLevelItem item : v.getItems()) {
             if (item instanceof Job && !(  // Skip disabled projects
                     item instanceof AbstractProject && ((AbstractProject) item).isDisabled())) {
                 final Run lastCompletedBuild = ((Job) item).getLastCompletedBuild();
                 if (lastCompletedBuild != null) {
                     found = true;
-                    if ((check = lastCompletedBuild.getResult()).isWorseThan(result)) {
+                    check = lastCompletedBuild.getResult();
+                    if (((check.isCompleteBuild() == result.isCompleteBuild()) &&
+                        check.isWorseThan(result)) ||
+                        (check.isCompleteBuild() && !result.isCompleteBuild())) {
                         result = check;
                         if (result.isWorseOrEqualTo(WORST_RESULT)) {
                             // cut the search if we find the worst possible case
