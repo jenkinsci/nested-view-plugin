@@ -312,7 +312,9 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
                 final Run lastCompletedBuild = ((Job) item).getLastCompletedBuild();
                 if (lastCompletedBuild != null) {
                     found = true;
-                    if ((check = lastCompletedBuild.getResult()).isWorseOrEqualTo(WORST_RESULT)) {
+                    check = lastCompletedBuild.getResult();
+                    if (check.isCompleteBuild() == WORST_RESULT.isCompleteBuild() &&
+                        check.isWorseOrEqualTo(WORST_RESULT)) {
                         // cut the search if we find the worst possible case
                         return check;
                     }
