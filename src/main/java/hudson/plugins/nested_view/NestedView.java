@@ -283,6 +283,22 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     }
 
     /**
+     * Returns the worse result from two.
+     */
+    private static Result getWorse(Result r1, Result r2) {
+        // completed build wins
+        if (!r1.isCompleteBuild() && r2.isCompleteBuild()) {
+            return r2;
+        }
+        if (r1.isCompleteBuild() && !r2.isCompleteBuild()) {
+            return r1;
+        }
+
+        // return worse one
+        return r1.isWorseThan(r2) ? r1 : r2;
+    }
+
+    /**
      * Returns the worst result for a normal view, by browsing all the jobs it
      * contains; As soon as {@link #WORST_RESULT} is found, the browsing stops.
      * Returns null if no build occurred yet
@@ -296,16 +312,12 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
                 final Run lastCompletedBuild = ((Job) item).getLastCompletedBuild();
                 if (lastCompletedBuild != null) {
                     found = true;
-                    check = lastCompletedBuild.getResult();
-                    if (((check.isCompleteBuild() == result.isCompleteBuild()) &&
-                        check.isWorseThan(result)) ||
-                        (check.isCompleteBuild() && !result.isCompleteBuild())) {
-                        result = check;
-                        if (result.isWorseOrEqualTo(WORST_RESULT)) {
-                            // cut the search if we find the worst possible case
-                            return result;
-                        }
+                    if ((check = lastCompletedBuild.getResult()).isWorseOrEqualTo(WORST_RESULT)) {
+                        // cut the search if we find the worst possible case
+                        return check;
                     }
+
+                    result = getWorse(check, result);
                 }
             }
         }
