@@ -51,7 +51,7 @@ import static hudson.Util.fixEmpty;
  * @author Romain Seguy
  */
 public class NestedView extends View implements ViewGroup, StaplerProxy {
-    private final static Result WORST_RESULT = Result.ABORTED;
+    private final static Result WORST_RESULT = Result.FAILURE;
 
     /**
      * Nested views.
@@ -283,26 +283,43 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
     }
 
     /**
+     * Returns the worse result from two.
+     */
+    private static Result getWorse(Result r1, Result r2) {
+        // completed build wins
+        if (!r1.isCompleteBuild() && r2.isCompleteBuild()) {
+            return r2;
+        }
+        if (r1.isCompleteBuild() && !r2.isCompleteBuild()) {
+            return r1;
+        }
+
+        // return worse one
+        return r1.isWorseThan(r2) ? r1 : r2;
+    }
+
+    /**
      * Returns the worst result for a normal view, by browsing all the jobs it
      * contains; As soon as {@link #WORST_RESULT} is found, the browsing stops.
      * Returns null if no build occurred yet
      */
     private static Result getWorstResultForNormalView(View v) {
         boolean found = false;
-        Result result = Result.SUCCESS, check;
+        Result result = Result.NOT_BUILT, check;
         for (TopLevelItem item : v.getItems()) {
             if (item instanceof Job && !(  // Skip disabled projects
                     item instanceof AbstractProject && ((AbstractProject) item).isDisabled())) {
                 final Run lastCompletedBuild = ((Job) item).getLastCompletedBuild();
                 if (lastCompletedBuild != null) {
                     found = true;
-                    if ((check = lastCompletedBuild.getResult()).isWorseThan(result)) {
-                        result = check;
-                        if (result.isWorseOrEqualTo(WORST_RESULT)) {
-                            // cut the search if we find the worst possible case
-                            return result;
-                        }
+                    check = lastCompletedBuild.getResult();
+                    if (check.isCompleteBuild() == WORST_RESULT.isCompleteBuild() &&
+                        check.isWorseOrEqualTo(WORST_RESULT)) {
+                        // cut the search if we find the worst possible case
+                        return check;
                     }
+
+                    result = getWorse(check, result);
                 }
             }
         }
