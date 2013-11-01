@@ -265,8 +265,8 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
             // has the worst result possible, in which case the algorithm ends)
             // TODO: derecursify the algorithm to improve performance on complex views
             check = v.getWorstResult();
-            found = true;
             if (check != null) {
+                found = true;
                 if (isWorst(check)) {
                     // as before, cut the search if we find the worst possible case
                     return check;
