@@ -229,7 +229,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
      * mentionned previously.</p>
      */
     public Result getWorstResult() {
-        Result result = Result.SUCCESS, check;
+        Result result = Result.NOT_BUILT, check;
         boolean found = false;
 
         List<View> normalViews = new ArrayList<View>();
@@ -250,13 +250,11 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
             check = getWorstResultForNormalView(v);
             if (check != null) {
                 found = true;
-                if (check.isWorseThan(result)) {
-                    result = check;
-                    if (result.isWorseOrEqualTo(WORST_RESULT)) {
-                        // cut the search if we find the worst possible case
-                        return result;
-                    }
+                if (isWorst(check)) {
+                    // cut the search if we find the worst possible case
+                    return check;
                 }
+                result = getWorse(check, result);
             }
         }
 
@@ -269,17 +267,23 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
             check = v.getWorstResult();
             found = true;
             if (check != null) {
-                if (check.isWorseThan(result)) {
-                    result = check;
-                    if (result.isWorseOrEqualTo(WORST_RESULT)) {
-                        // as before, cut the search if we find the worst possible case
-                        return result;
-                    }
+                if (isWorst(check)) {
+                    // as before, cut the search if we find the worst possible case
+                    return check;
                 }
+                result = getWorse(check, result);
             }
         }
 
         return found ? result : null;
+    }
+
+    /**
+     * Returns true if r is worst.
+     */
+    private static boolean isWorst(Result r) {
+        return (r.isCompleteBuild() == WORST_RESULT.isCompleteBuild() &&
+            r.isWorseOrEqualTo(WORST_RESULT));
     }
 
     /**
@@ -313,8 +317,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
                 if (lastCompletedBuild != null) {
                     found = true;
                     check = lastCompletedBuild.getResult();
-                    if (check.isCompleteBuild() == WORST_RESULT.isCompleteBuild() &&
-                        check.isWorseOrEqualTo(WORST_RESULT)) {
+                    if (isWorst(check)) {
                         // cut the search if we find the worst possible case
                         return check;
                     }
