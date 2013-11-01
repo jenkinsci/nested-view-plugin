@@ -113,6 +113,15 @@ public class NestedViewTest extends HudsonTestCase {
         assertSame(SUCCESS, NestedView.getWorstResult(view));    // Ignore disabled job
     }
 
+    public void testStatusOfEmptyNest() throws Exception {
+        NestedView parent = new NestedView("parent");
+        parent.setOwner(hudson);
+        NestedView child = new NestedView("child");
+        parent.addView(child);
+        assertSame(null, NestedView.getWorstResult(child));     // Empty
+        assertSame(null, NestedView.getWorstResult(parent));    // contains Empty child only
+    }
+
     public void testDoViewExistsCheck() {
         NestedView view = new NestedView("test");
         view.setOwner(hudson);
