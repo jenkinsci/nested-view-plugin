@@ -166,6 +166,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
 
     public void deleteView(View view) throws IOException {
         views.remove(view);
+        save();
     }
 
     @Exported
