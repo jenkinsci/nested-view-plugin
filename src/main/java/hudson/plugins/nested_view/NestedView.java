@@ -32,6 +32,7 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.views.ListViewColumn;
 import hudson.views.ViewsTabBar;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.Exported;
 
@@ -75,6 +76,67 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
 
     public boolean contains(TopLevelItem item) {
         return false;
+    }
+
+    public boolean hasAllView() {
+        for (View v : views) {
+            if (v instanceof NestedView) {
+                if (((NestedView)v).hasAllView()) {
+                    return true;
+                }
+            } else if (v instanceof AllView) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<hudson.model.Queue.Item> filterQueue(List<hudson.model.Queue.Item> base) {
+        if (!isFilterQueue() || hasAllView()) {
+            return base;
+        }
+
+        // we use a set to avoid taking into account several times the same job
+        // when computing the health
+        Set<TopLevelItem> items = new LinkedHashSet<TopLevelItem>(100);
+
+        // retrieve all jobs to analyze (using DFS)
+        Deque<View> viewsStack = new ArrayDeque<View>(20);
+        viewsStack.push(this);
+        do {
+            View currentView = viewsStack.pop();
+            if (currentView instanceof NestedView) {
+                for (View v : ((NestedView) currentView).views) {
+                    viewsStack.push(v);
+                }
+            } else {
+                items.addAll(currentView.getItems());
+            }
+        } while (!viewsStack.isEmpty());
+
+        List<hudson.model.Queue.Item> result = new ArrayList<hudson.model.Queue.Item>();
+        for (hudson.model.Queue.Item qi : base) {
+            if (items.contains(qi.task)) {
+                result.add(qi);
+            } else
+            if (qi.task instanceof AbstractProject<?, ?>) {
+                AbstractProject<?,?> project = (AbstractProject<?, ?>) qi.task;
+                if (items.contains(project.getRootProject())) {
+                    result.add(qi);
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public List<hudson.model.Queue.Item> getQueueItems() {
+        return filterQueue(Arrays.asList(Jenkins.getInstance().getQueue().getItems()));
+    }
+
+    @Override
+    public List<hudson.model.Queue.Item> getApproximateQueueItemsQuickly() {
+        return filterQueue(Jenkins.getInstance().getQueue().getApproximateItemsQuickly());
     }
 
     @Override
