@@ -32,6 +32,8 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.views.ListViewColumn;
 import hudson.views.ViewsTabBar;
+import jenkins.model.ModelObjectWithContextMenu;
+import org.apache.commons.jelly.JellyException;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.Exported;
 
@@ -50,8 +52,8 @@ import static hudson.Util.fixEmpty;
  * @author Kohsuke Kawaguchi
  * @author Romain Seguy
  */
-public class NestedView extends View implements ViewGroup, StaplerProxy {
-    private final static Result WORST_RESULT = Result.ABORTED;
+public class NestedView extends View implements ViewGroup, StaplerProxy, ModelObjectWithContextMenu {
+    private final static Result WORST_RESULT = Result.FAILURE;
 
     /**
      * Nested views.
@@ -77,6 +79,23 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
         return false;
     }
 
+    public ContextMenu doContextMenu(StaplerRequest request, StaplerResponse response) throws IOException, JellyException {
+        return new ContextMenu().from(this, request, response);
+    }
+
+    public ContextMenu doChildrenContextMenu(StaplerRequest request, StaplerResponse response) throws Exception {
+        ContextMenu menu = new ContextMenu();
+        for (View view : getViews()) {
+            menu.add("/" + view.getViewUrl(),view.getDisplayName());
+        }
+        return menu;
+    }
+
+    @Override
+    public String getUrl() {
+        return getViewUrl();
+    }
+
     @Override
     public View getPrimaryView() {
         return null;
@@ -99,6 +118,31 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
             return ((ModifiableItemGroup) itemGroup).doCreateItem(req, rsp);
         }
         return null;
+    }
+
+    /**
+     * Checks if a nested view with the given name exists and 
+     * make sure that the name is good as a view name.
+     */
+    public FormValidation doCheckViewName(@QueryParameter String value) {
+        checkPermission(View.CREATE);
+        
+        String name = fixEmpty(value);
+        if (name == null) 
+            return FormValidation.ok();
+        
+        // already exists?
+        if (getView(name) != null) 
+            return FormValidation.error(hudson.model.Messages.Hudson_ViewAlreadyExists(name));
+        
+        // good view name?
+        try {
+            jenkins.model.Jenkins.checkGoodName(name);
+        } catch (Failure e) {
+            return FormValidation.error(e.getMessage());
+        }
+
+        return FormValidation.ok();
     }
 
     /**
@@ -136,6 +180,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
 
     public void deleteView(View view) throws IOException {
         views.remove(view);
+        save();
     }
 
     @Exported
@@ -199,7 +244,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
      * mentionned previously.</p>
      */
     public Result getWorstResult() {
-        Result result = Result.SUCCESS, check;
+        Result result = Result.NOT_BUILT, check;
         boolean found = false;
 
         List<View> normalViews = new ArrayList<View>();
@@ -220,13 +265,11 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
             check = getWorstResultForNormalView(v);
             if (check != null) {
                 found = true;
-                if (check.isWorseThan(result)) {
-                    result = check;
-                    if (result.isWorseOrEqualTo(WORST_RESULT)) {
-                        // cut the search if we find the worst possible case
-                        return result;
-                    }
+                if (isWorst(check)) {
+                    // cut the search if we find the worst possible case
+                    return check;
                 }
+                result = getWorse(check, result);
             }
         }
 
@@ -237,19 +280,41 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
             // has the worst result possible, in which case the algorithm ends)
             // TODO: derecursify the algorithm to improve performance on complex views
             check = v.getWorstResult();
-            found = true;
             if (check != null) {
-                if (check.isWorseThan(result)) {
-                    result = check;
-                    if (result.isWorseOrEqualTo(WORST_RESULT)) {
-                        // as before, cut the search if we find the worst possible case
-                        return result;
-                    }
+                found = true;
+                if (isWorst(check)) {
+                    // as before, cut the search if we find the worst possible case
+                    return check;
                 }
+                result = getWorse(check, result);
             }
         }
 
         return found ? result : null;
+    }
+
+    /**
+     * Returns true if r is worst.
+     */
+    private static boolean isWorst(Result r) {
+        return (r.isCompleteBuild() == WORST_RESULT.isCompleteBuild() &&
+            r.isWorseOrEqualTo(WORST_RESULT));
+    }
+
+    /**
+     * Returns the worse result from two.
+     */
+    private static Result getWorse(Result r1, Result r2) {
+        // completed build wins
+        if (!r1.isCompleteBuild() && r2.isCompleteBuild()) {
+            return r2;
+        }
+        if (r1.isCompleteBuild() && !r2.isCompleteBuild()) {
+            return r1;
+        }
+
+        // return worse one
+        return r1.isWorseThan(r2) ? r1 : r2;
     }
 
     /**
@@ -259,20 +324,20 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
      */
     private static Result getWorstResultForNormalView(View v) {
         boolean found = false;
-        Result result = Result.SUCCESS, check;
+        Result result = Result.NOT_BUILT, check;
         for (TopLevelItem item : v.getItems()) {
             if (item instanceof Job && !(  // Skip disabled projects
                     item instanceof AbstractProject && ((AbstractProject) item).isDisabled())) {
                 final Run lastCompletedBuild = ((Job) item).getLastCompletedBuild();
                 if (lastCompletedBuild != null) {
                     found = true;
-                    if ((check = lastCompletedBuild.getResult()).isWorseThan(result)) {
-                        result = check;
-                        if (result.isWorseOrEqualTo(WORST_RESULT)) {
-                            // cut the search if we find the worst possible case
-                            return result;
-                        }
+                    check = lastCompletedBuild.getResult();
+                    if (isWorst(check)) {
+                        // cut the search if we find the worst possible case
+                        return check;
                     }
+
+                    result = getWorse(check, result);
                 }
             }
         }

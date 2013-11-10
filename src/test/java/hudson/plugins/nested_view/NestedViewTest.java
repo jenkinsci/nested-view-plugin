@@ -91,7 +91,7 @@ public class NestedViewTest extends HudsonTestCase {
         assertNotNull(page.getAnchorByHref("job/Efgh/"));
         // Verify link to add a subview for empty nested view
         page = wc.goTo("view/test-nest/view/subnest/");
-        assertNotNull(page.getAnchorByHref("newView"));
+        assertNotNull(page.getAnchorByHref("/view/test-nest/view/subnest/newView"));
     }
 
     public void testGetWorstResult() throws Exception {
@@ -111,6 +111,15 @@ public class NestedViewTest extends HudsonTestCase {
         assertSame(FAILURE, NestedView.getWorstResult(view));    // Job failed
         bad.disable();
         assertSame(SUCCESS, NestedView.getWorstResult(view));    // Ignore disabled job
+    }
+
+    public void testStatusOfEmptyNest() throws Exception {
+        NestedView parent = new NestedView("parent");
+        parent.setOwner(hudson);
+        NestedView child = new NestedView("child");
+        parent.addView(child);
+        assertSame(null, NestedView.getWorstResult(child));     // Empty
+        assertSame(null, NestedView.getWorstResult(parent));    // contains Empty child only
     }
 
     public void testDoViewExistsCheck() {
