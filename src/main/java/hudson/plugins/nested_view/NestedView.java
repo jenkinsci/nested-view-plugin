@@ -32,6 +32,8 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.views.ListViewColumn;
 import hudson.views.ViewsTabBar;
+import jenkins.model.ModelObjectWithContextMenu;
+import org.apache.commons.jelly.JellyException;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.Exported;
 
@@ -50,7 +52,7 @@ import static hudson.Util.fixEmpty;
  * @author Kohsuke Kawaguchi
  * @author Romain Seguy
  */
-public class NestedView extends View implements ViewGroup, StaplerProxy {
+public class NestedView extends View implements ViewGroup, StaplerProxy, ModelObjectWithContextMenu {
     private final static Result WORST_RESULT = Result.FAILURE;
 
     /**
@@ -75,6 +77,18 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
 
     public boolean contains(TopLevelItem item) {
         return false;
+    }
+
+    public ContextMenu doContextMenu(StaplerRequest request, StaplerResponse response) throws IOException, JellyException {
+        return new ContextMenu().from(this, request, response);
+    }
+
+    public ContextMenu doChildrenContextMenu(StaplerRequest request, StaplerResponse response) throws Exception {
+        ContextMenu menu = new ContextMenu();
+        for (View view : getViews()) {
+            menu.add("/" + view.getViewUrl(),view.getDisplayName());
+        }
+        return menu;
     }
 
     @Override
