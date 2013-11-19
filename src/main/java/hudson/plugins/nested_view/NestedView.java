@@ -86,7 +86,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     public ContextMenu doChildrenContextMenu(StaplerRequest request, StaplerResponse response) throws Exception {
         ContextMenu menu = new ContextMenu();
         for (View view : getViews()) {
-            menu.add("/" + view.getViewUrl(),view.getDisplayName());
+            menu.add(new MenuItem().withContextRelativeUrl(view.getUrl()).withDisplayName(view.getDisplayName()));
         }
         return menu;
     }
