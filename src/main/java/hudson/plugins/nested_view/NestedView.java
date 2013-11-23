@@ -445,7 +445,8 @@ public class NestedView extends View implements ViewGroup, StaplerProxy {
 
     public Object getTarget() {
         // Proxy to handle redirect when a default subview is configured
-        return "".equals(Stapler.getCurrentRequest().getRestOfPath())
+        return (getDefaultView() != null &&
+                "".equals(Stapler.getCurrentRequest().getRestOfPath()))
                 ? new DefaultViewProxy() : this;
     }
 
