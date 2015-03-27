@@ -36,6 +36,7 @@ import jenkins.model.ModelObjectWithContextMenu;
 import org.apache.commons.jelly.JellyException;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.Exported;
+import hudson.security.Permission;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -74,6 +75,16 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     public List<TopLevelItem> getItems() {
         return Collections.emptyList();
     }
+    
+	@Override
+	public boolean hasPermission(Permission p) {
+		for (View view : views) {
+			if (view.hasPermission(p)) {
+				return true;
+			}
+		}
+		return super.hasPermission(p);
+	}
 
     public boolean contains(TopLevelItem item) {
         return false;
