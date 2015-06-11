@@ -24,6 +24,27 @@
  */
 package hudson.plugins.nested_view;
 
+import com.thoughtworks.xstream.converters.ConversionException;
+import com.thoughtworks.xstream.io.StreamException;
+import com.thoughtworks.xstream.io.xml.XppDriver;
+import hudson.util.IOException2;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import java.io.StringWriter;
+import hudson.util.XStream2;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.Source;
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.Converter;
+import com.thoughtworks.xstream.converters.MarshallingContext;
+import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
+import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.*;
@@ -399,6 +420,70 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
 
         return hrc;
     }
+    
+    @Override
+    @WebMethod(name = "config.xml")
+    public HttpResponse doConfigDotXml(StaplerRequest req) throws IOException {
+       if (req.getMethod().equals("GET")) {
+            checkPermission(READ);
+            return new HttpResponse() {
+                public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node) throws IOException, ServletException {
+                    
+                    rsp.setContentType("application/xml");
+                    XStream2 xStream2 = new XStream2();
+                    //the owner of this view has to stay unchanged.
+                    xStream2.registerLocalConverter(View.class, "owner", new OwnerConvertor());
+                    
+                    xStream2.toXMLUTF8(NestedView.this,  rsp.getOutputStream());
+                }
+            };
+        }
+        if (req.getMethod().equals("POST")) {
+            updateByXml((Source)new StreamSource(req.getReader()));
+            
+            return HttpResponses.ok();
+        }
+        return HttpResponses.error(400, "Unexpected request method " + req.getMethod());
+    
+    }
+    
+         /**
+     * Updates View by its XML definition.
+     */
+    @Override
+    public void updateByXml(Source source) throws IOException {
+        checkPermission(CONFIGURE);
+        StringWriter out = new StringWriter();
+        try {
+            // this allows us to use UTF-8 for storing data,
+            // plus it checks any well-formedness issue in the submitted
+            // data
+            Transformer t = TransformerFactory.newInstance()
+                    .newTransformer();
+            t.transform(source,
+                    new StreamResult(out));
+            out.close();
+        } catch (TransformerException e) {
+            throw new IOException2("Failed to persist configuration.xml", e);
+        }
+        InputStream in = new BufferedInputStream(new ByteArrayInputStream(out.toString().getBytes("UTF-8")));
+        try {
+            XStream2 xstream = new XStream2();
+            //Owner of this view does not have to be changed
+            xstream.registerLocalConverter(View.class, "owner", new OwnerConvertor());
+            xstream.unmarshal(new XppDriver().createReader(in), this);
+        } catch (StreamException e) {
+            throw new IOException2("Unable to read",e);
+        } catch(ConversionException e) {
+            throw new IOException2("Unable to read",e);
+        } catch(Error e) {// mostly reflection errors
+            throw new IOException2("Unable to read",e);
+        } finally {
+            in.close();
+        }
+        //owner = gr;
+        save();
+    }
 
     /**
      * Returns the health of a normal view.
@@ -472,6 +557,37 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
             else
                 req.getView(NestedView.this, "index.jelly").forward(req, rsp);
         }
+    }
+    
+    /**
+     * Handle owner attribute
+     */
+    public class OwnerConvertor implements Converter {
+       
+
+        public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
+            XStream stream = new XStream();
+            if(source.equals(owner)){
+                writer.addAttribute("ignore", "true");
+                return;
+            }
+            stream.marshal(source, writer);
+           
+        }
+
+        public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
+            if(reader.getAttribute("ignore")!=null && reader.getAttribute("ignore").equals("true")){
+                return owner;
+            }
+            XStream stream = new XStream();
+            Object o = stream.unmarshal(reader);
+            return o;
+        }
+
+        public boolean canConvert(Class type) {
+            return ViewGroup.class.isAssignableFrom(type);
+        }
+  
     }
 
     @Extension
