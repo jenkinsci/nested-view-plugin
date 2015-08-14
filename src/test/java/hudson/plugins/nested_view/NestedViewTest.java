@@ -28,6 +28,7 @@ import com.gargoylesoftware.htmlunit.WebRequestSettings;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlOption;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.xml.XmlPage;
 import hudson.model.AllView;
 import hudson.model.Cause.UserCause;
 import hudson.model.FreeStyleProject;
@@ -37,48 +38,55 @@ import hudson.security.csrf.CrumbIssuer;
 import static hudson.util.FormValidation.Kind.*;
 import java.net.URL;
 import java.util.List;
-
+import static org.junit.Assert.*;
+import org.junit.Rule;
+import org.junit.Test;
 import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.FailureBuilder;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
 /**
  * Test interaction of nested-view plugin with Jenkins core.
  * @author Alan Harder
  */
-public class NestedViewTest extends HudsonTestCase {
-
+public class NestedViewTest {
+    
+    @Rule
+    public JenkinsRule rule = new JenkinsRule();
+    
+    @Test
     public void test() throws Exception {
-        createFreeStyleProject("Abcd");
-        createFreeStyleProject("Efgh");
-        WebClient wc = new WebClient();
+        rule.createFreeStyleProject("Abcd");
+        rule.createFreeStyleProject("Efgh");
+        WebClient wc = rule.createWebClient();
 
         // Create a new nested view
         HtmlForm form = wc.goTo("newView").getFormByName("createItem");
         form.getInputByName("name").setValueAttribute("test-nest");
         form.getInputByValue("hudson.plugins.nested_view.NestedView").setChecked(true);
-        submit(form);
+        rule.submit(form);
         // Add some subviews
         form = wc.goTo("view/test-nest/newView").getFormByName("createItem");
         form.getInputByName("name").setValueAttribute("subview");
         form.getInputByValue("hudson.model.ListView").setChecked(true);
-        form = submit(form).getFormByName("viewConfig");
+        form = rule.submit(form).getFormByName("viewConfig");
         form.getInputByName("useincluderegex").setChecked(true);
         form.getInputByName("includeRegex").setValueAttribute("E.*");
-        submit(form);
+        rule.submit(form);
         form = wc.goTo("view/test-nest/newView").getFormByName("createItem");
         form.getInputByName("name").setValueAttribute("subnest");
         form.getInputByValue("hudson.plugins.nested_view.NestedView").setChecked(true);
-        submit(form);
+        rule.submit(form);
         form = wc.goTo("view/test-nest/newView").getFormByName("createItem");
         form.getInputByName("name").setValueAttribute("suball");
         form.getInputByValue("hudson.model.AllView").setChecked(true);
-        submit(form);
+        rule.submit(form);
         // Verify links to subviews
         HtmlPage page = wc.goTo("view/test-nest/");
-        assertNotNull(page.getAnchorByHref("/view/test-nest/view/subview/"));
-        assertNotNull(page.getAnchorByHref("/view/test-nest/view/subnest/"));
-        assertNotNull(page.getAnchorByHref("/view/test-nest/view/suball/"));
+        assertNotNull(page.getAnchorByHref("/jenkins/view/test-nest/view/subview/"));
+        assertNotNull(page.getAnchorByHref("/jenkins/view/test-nest/view/subnest/"));
+        assertNotNull(page.getAnchorByHref("/jenkins/view/test-nest/view/suball/"));
         // Now set a default subview
         form = wc.goTo("view/test-nest/configure").getFormByName("viewConfig");
         List<HtmlOption> options = form.getSelectByName("defaultView").getOptions();
@@ -88,46 +96,49 @@ public class NestedViewTest extends HudsonTestCase {
         // "None" and 2 views in alphabetical order; subnest should not be in list
         assertEquals(3, options.size());
         options.get(1).setSelected(true);
-        submit(form);
+        rule.submit(form);
         // Verify redirect to default subview
         page = wc.goTo("view/test-nest/");
         assertNotNull(page.getAnchorByHref("job/Efgh/"));
         // Verify link to add a subview for empty nested view
         page = wc.goTo("view/test-nest/view/subnest/");
-        assertNotNull(page.getAnchorByHref("/view/test-nest/view/subnest/newView"));
+        assertNotNull(page.getAnchorByHref("/jenkins/view/test-nest/view/subnest/newView"));
     }
 
+    @Test
     public void testGetWorstResult() throws Exception {
         NestedView view = new NestedView("test");
-        view.setOwner(hudson);
+        view.setOwner(rule.jenkins);
         assertSame(null, NestedView.getWorstResult(view));    // Empty
         view.addView(new AllView("foo", view));
         assertSame(null, NestedView.getWorstResult(view));    // Empty
-        FreeStyleProject p = createFreeStyleProject();
+        FreeStyleProject p = rule.createFreeStyleProject();
         assertSame(null, NestedView.getWorstResult(view));    // Job not yet run
-        assertBuildStatusSuccess(p.scheduleBuild2(0, new UserCause()).get());
+        rule.assertBuildStatusSuccess(p.scheduleBuild2(0, new UserCause()).get());
         assertSame(SUCCESS, NestedView.getWorstResult(view));    // Job ran ok
-        FreeStyleProject bad = createFreeStyleProject();
+        FreeStyleProject bad = rule.createFreeStyleProject();
         bad.getBuildersList().add(new FailureBuilder());
         assertSame(SUCCESS, NestedView.getWorstResult(view));    // New job not yet run
-        assertBuildStatus(FAILURE, bad.scheduleBuild2(0, new UserCause()).get());
+        rule.assertBuildStatus(FAILURE, bad.scheduleBuild2(0, new UserCause()).get());
         assertSame(FAILURE, NestedView.getWorstResult(view));    // Job failed
         bad.disable();
         assertSame(SUCCESS, NestedView.getWorstResult(view));    // Ignore disabled job
     }
 
+    @Test
     public void testStatusOfEmptyNest() throws Exception {
         NestedView parent = new NestedView("parent");
-        parent.setOwner(hudson);
+        parent.setOwner(rule.jenkins);
         NestedView child = new NestedView("child");
         parent.addView(child);
         assertSame(null, NestedView.getWorstResult(child));     // Empty
         assertSame(null, NestedView.getWorstResult(parent));    // contains Empty child only
     }
 
+    @Test
     public void testDoViewExistsCheck() {
         NestedView view = new NestedView("test");
-        view.setOwner(hudson);
+        view.setOwner(rule.jenkins);
         view.addView(new ListView("foo", view));
         assertSame(OK, view.doViewExistsCheck(null).kind);
         assertSame(OK, view.doViewExistsCheck("").kind);
@@ -138,25 +149,25 @@ public class NestedViewTest extends HudsonTestCase {
     @Bug(25315)
     public void testUploadXml() throws Exception {
         NestedView parent = new NestedView("parent");
-        jenkins.addView(parent);
-        assertEquals(jenkins, parent.getOwner());
+        rule.jenkins.addView(parent);
+        assertEquals(rule.jenkins, parent.getOwner());
         NestedView child = new NestedView("child");
         parent.addView(child);
         child.setOwner(parent);
-        WebClient wc = createWebClient();
+        WebClient wc = rule.createWebClient();
         wc.goTo("view/parent/view/child/");
         String xml = wc.goToXml("view/parent/config.xml").getContent();
         assertFalse(xml, xml.contains("<owner"));
         // First try creating a clone of this view (Jenkins.doCreateView → View.create → View.createViewFromXML):
         // TODO wc.createCrumbedUrl does not work when you are specifying your own query parameters
-        CrumbIssuer issuer = jenkins.getCrumbIssuer();
-        WebRequestSettings req = new WebRequestSettings(new URL(getURL(), "/createView?name=clone&" + issuer.getDescriptor().getCrumbRequestField() + "=" + issuer.getCrumb(null)), HttpMethod.POST);
+        CrumbIssuer issuer = rule.jenkins.getCrumbIssuer();
+        WebRequestSettings req = new WebRequestSettings(new URL(rule.getURL(), "/createView?name=clone&" + issuer.getDescriptor().getCrumbRequestField() + "=" + issuer.getCrumb(null)), HttpMethod.POST);
         req.setAdditionalHeader("Content-Type", "application/xml");
         req.setRequestBody(xml);
         wc.getPage(req);
-        NestedView clone = (NestedView) jenkins.getView("clone");
+        NestedView clone = (NestedView) rule.jenkins.getView("clone");
         assertNotNull(clone);
-        assertEquals(jenkins, clone.getOwner());
+        assertEquals(rule.jenkins, clone.getOwner());
         child = (NestedView) clone.getView("child");
         assertNotNull(child);
         assertEquals(clone, child.getOwner());
@@ -166,13 +177,51 @@ public class NestedViewTest extends HudsonTestCase {
         req.setAdditionalHeader("Content-Type", "application/xml");
         req.setRequestBody(xml);
         wc.getPage(req);
-        parent = (NestedView) jenkins.getView("parent");
+        parent = (NestedView) rule.jenkins.getView("parent");
         assertNotNull(parent);
-        assertEquals(jenkins, parent.getOwner());
+        assertEquals(rule.jenkins, parent.getOwner());
         child = (NestedView) parent.getView("child");
         assertNotNull(child);
         assertEquals(parent, child.getOwner());
         wc.goTo("view/parent/view/child/");
     }
 
+    //nested view should be reloadable from config.xml which it provides
+    @Test
+    public void testDotConfigXmlOwnerSettings() throws Exception{
+        NestedView root = new NestedView("nestedRoot");
+        root.setOwner(rule.jenkins);
+        ListView viewLevel1 = new ListView("listViewlvl1", root);
+        NestedView subviewLevel1 = new NestedView("nestedViewlvl1");
+        subviewLevel1.setOwner(root);
+        NestedView subviewLevel2 = new NestedView ("nestedViewlvl2");
+        subviewLevel2.setOwner(subviewLevel1);
+        ListView viewLevel2 = new ListView("listViewlvl2", subviewLevel1);
+        ListView viewLevel3 = new ListView("listViewlvl3", subviewLevel2);
+        root.addView(viewLevel1);
+        root.addView(subviewLevel1);
+        subviewLevel1.addView(subviewLevel2);
+        subviewLevel1.addView(viewLevel2);
+        subviewLevel2.addView(viewLevel3);
+        rule.jenkins.addView(root);
+        root.save();
+        WebClient wc = rule.createWebClient();
+        URL url = new URL(rule.jenkins.getRootUrl() + root.getUrl() + "config.xml");
+        XmlPage page = wc.getPage(url);
+        String configDotXml = page.getWebResponse().getContentAsString();
+        configDotXml = configDotXml.replace("listViewlvl1", "new");
+        url = new URL(rule.jenkins.getRootUrl() + root.getUrl() + "config.xml/?.crumb=test");
+        WebRequestSettings s = new WebRequestSettings(url, HttpMethod.POST);
+        s.setRequestBody(configDotXml);
+        wc.addRequestHeader("Content-Type", "application/xml");
+        HtmlPage p = wc.getPage(s);
+        assertEquals("Root Nested view should have set owner.", rule.jenkins, rule.jenkins.getView("nestedRoot").getOwner());
+        assertNotNull("Configuration should be updated.", ((NestedView)rule.jenkins.getView("nestedRoot")).getView("new"));
+        root = (NestedView) rule.jenkins.getView("nestedRoot");
+        assertEquals("Nested subview should have correct owner.", root, root.getView("nestedViewlvl1").getOwner());
+        assertEquals("ListView subview should have correct woner.",root, root.getView("new").getOwner());
+        NestedView subview = (NestedView) root.getView("nestedViewlvl1");
+        assertEquals("Nested subview of subview should have correct woner.",subview, subview.getView("nestedViewlvl2").getOwner());
+        assertEquals("Listview subview of subview should have correct woner.",subview, subview.getView("nestedViewlvl2").getOwner());  
+    }
 }
