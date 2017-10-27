@@ -1,1 +1,2 @@
+<?jelly escape-by-default='true'?>
 <st:include from="${app}" page="newView.jelly" xmlns:st="jelly:stapler" />

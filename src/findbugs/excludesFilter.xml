@@ -1,0 +1,6 @@
+<FindBugsFilter>
+  <Match>
+    <!-- TODO why does this plugin need to suppress NM_METHOD_NAMING_CONVENTION errors when, say, cloudbees-folder does not, even though it also has uppercase keys? -->
+    <Class name="~.*\.Messages"/>
+  </Match>
+</FindBugsFilter>
