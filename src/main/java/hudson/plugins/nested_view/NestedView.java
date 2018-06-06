@@ -94,10 +94,10 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     }
 
     private Object readResolve() throws Exception {
+        // Unfortunately various methods which set View.owner are inappropriate here.
+        Field ownerF = View.class.getDeclaredField("owner");
+        ownerF.setAccessible(true);
         for (View view : views) {
-            // Unfortunately various methods which set View.owner are inappropriate here.
-            Field ownerF = View.class.getDeclaredField("owner");
-            ownerF.setAccessible(true);
             ownerF.set(view, this);
         }
         return this;
