@@ -29,6 +29,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlOption;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.xml.XmlPage;
+import hudson.model.AbstractProject;
 import hudson.model.AllView;
 import hudson.model.Cause.UserCause;
 import hudson.model.FreeStyleProject;
@@ -36,6 +37,7 @@ import hudson.model.ListView;
 import static hudson.model.Result.*;
 import hudson.security.csrf.CrumbIssuer;
 import static hudson.util.FormValidation.Kind.*;
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import static org.junit.Assert.*;
@@ -223,5 +225,23 @@ public class NestedViewTest {
         NestedView subview = (NestedView) root.getView("nestedViewlvl1");
         assertEquals("Nested subview of subview should have correct woner.",subview, subview.getView("nestedViewlvl2").getOwner());
         assertEquals("Listview subview of subview should have correct woner.",subview, subview.getView("nestedViewlvl2").getOwner());  
+    }
+    
+    
+    /**
+     * JENKINS-25276 
+     */
+    @Test
+    public void testRenameJob() throws IOException{
+        FreeStyleProject project = rule.createFreeStyleProject("project");
+        NestedView view = new NestedView("nested");
+        view.setOwner(rule.jenkins);
+        rule.jenkins.addView(view);
+        ListView subview = new ListView("listView", view);
+        view.addView(subview);
+        subview.add(project);
+        assertTrue("Subview 'listView' should contains item 'project'", subview.contains(project));
+        project.renameTo("project-renamed");
+        assertTrue("Subview contains renamed item.", subview.contains(project));
     }
 }
