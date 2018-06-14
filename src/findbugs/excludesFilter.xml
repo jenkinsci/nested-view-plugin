@@ -1,0 +1,6 @@
+<FindBugsFilter>
+  <Match>
+    <!-- TODO pending a patch to org.jvnet.localizer.Generator to insert @SuppressFBWarnings("NM_METHOD_NAMING_CONVENTION"); seems to only affect uppercase keys with no dots (so, NoJobs rather than NestedView.NoJobs) -->
+    <Class name="~.*\.Messages"/>
+  </Match>
+</FindBugsFilter>

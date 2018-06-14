@@ -57,7 +57,11 @@ public class NestedViewColumns {
     }
 
     private static DescriptorExtensionList<ListViewColumn, Descriptor<ListViewColumn>> allViewColumns() {
-        return Jenkins.getInstance().getDescriptorList(ListViewColumn.class);
+        Jenkins j = Jenkins.getInstance();
+        if (j == null) {
+            throw new IllegalStateException();
+        }
+        return j.getDescriptorList(ListViewColumn.class);
     }
 
     private static List<Descriptor<ListViewColumn>> extractOptionalColumns(

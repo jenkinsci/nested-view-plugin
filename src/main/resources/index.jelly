@@ -1,3 +1,4 @@
+<?jelly escape-by-default='true'?>
 <div>
   View type to allow grouping job views into multiple levels instead of one big list of tabs.
 </div>

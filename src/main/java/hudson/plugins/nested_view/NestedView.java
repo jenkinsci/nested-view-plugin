@@ -277,7 +277,6 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
 
     /**
      * Returns the worst result for this nested view.
-     * <p/>
      * <p>To get the worst result, this method browses all the jobs this view
      * contains. Also, as soon as it finds the worst result possible (cf.
      * {@link #WORST_RESULT}), the browsing stops.</p>
@@ -375,6 +374,9 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
                 if (lastCompletedBuild != null) {
                     found = true;
                     check = lastCompletedBuild.getResult();
+                    if (check == null) {
+                        check = Result.SUCCESS;
+                    }
                     if (isWorst(check)) {
                         // cut the search if we find the worst possible case
                         return check;
@@ -404,7 +406,6 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
 
     /**
      * Returns the health of this nested view.
-     * <p/>
      * <p>Notice that, if a job is contained in several sub-views of the current
      * view, then it is taken into account only once to get accurate stats.</p>
      * <p>This algorithm has been derecursified, hence the stack stuff.</p>
