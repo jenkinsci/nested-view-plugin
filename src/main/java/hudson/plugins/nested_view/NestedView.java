@@ -64,6 +64,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static hudson.Util.fixEmpty;
+import java.lang.reflect.Field;
 
 /**
  * View type that contains only another set of views.
@@ -90,6 +91,16 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     @DataBoundConstructor
     public NestedView(String name) {
         super(name);
+    }
+
+    private Object readResolve() throws Exception {
+        // Unfortunately various methods which set View.owner are inappropriate here.
+        Field ownerF = View.class.getDeclaredField("owner");
+        ownerF.setAccessible(true);
+        for (View view : views) {
+            ownerF.set(view, this);
+        }
+        return this;
     }
 
     public List<TopLevelItem> getItems() {
