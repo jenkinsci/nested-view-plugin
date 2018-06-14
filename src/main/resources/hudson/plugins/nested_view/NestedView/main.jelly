@@ -50,10 +50,10 @@ THE SOFTWARE.
           <tr style="border-top:0">
             <th width="1"></th>
             <j:if test="${optionalColumns.showStatusColumn}">
-              <th width="1" tooltip="${%StatusTooltip}">${h.nbspIndent(iconSize)}S</th>
+              <th width="1" tooltip="${%StatusTooltip}"><j:out value="${h.nbspIndent(iconSize)}"/>S</th>
             </j:if>
             <j:if test="${optionalColumns.showWeatherColumn}">
-              <th width="1" tooltip="${%WeatherTooltip}">${h.nbspIndent(iconSize)}W</th>
+              <th width="1" tooltip="${%WeatherTooltip}"><j:out value="${h.nbspIndent(iconSize)}"/>W</th>
             </j:if>
             <th width="*">${%View}</th>
           </tr>
