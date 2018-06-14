@@ -23,7 +23,6 @@
  */
 package hudson.plugins.nested_view;
 
-
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
@@ -35,18 +34,17 @@ import hudson.model.Cause.UserCause;
 import hudson.model.FreeStyleProject;
 import hudson.model.ListView;
 import static hudson.model.Result.*;
+import hudson.security.csrf.CrumbIssuer;
 import static hudson.util.FormValidation.Kind.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
-
 import static org.junit.Assert.*;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.FailureBuilder;
 import org.jvnet.hudson.test.Issue;
-
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
@@ -149,7 +147,47 @@ public class NestedViewTest {
         assertSame(OK, view.doViewExistsCheck("bar").kind);
         assertSame(ERROR, view.doViewExistsCheck("foo").kind);
     }
-    
+
+    @Bug(25315)
+    public void testUploadXml() throws Exception {
+        NestedView parent = new NestedView("parent");
+        rule.jenkins.addView(parent);
+        assertEquals(rule.jenkins, parent.getOwner());
+        NestedView child = new NestedView("child");
+        parent.addView(child);
+        child.setOwner(parent);
+        WebClient wc = rule.createWebClient();
+        wc.goTo("view/parent/view/child/");
+        String xml = wc.goToXml("view/parent/config.xml").getContent();
+        assertFalse(xml, xml.contains("<owner"));
+        // First try creating a clone of this view (Jenkins.doCreateView → View.create → View.createViewFromXML):
+        // TODO wc.createCrumbedUrl does not work when you are specifying your own query parameters
+        CrumbIssuer issuer = rule.jenkins.getCrumbIssuer();
+        WebRequestSettings req = new WebRequestSettings(new URL(rule.getURL(), "/createView?name=clone&" + issuer.getDescriptor().getCrumbRequestField() + "=" + issuer.getCrumb(null)), HttpMethod.POST);
+        req.setAdditionalHeader("Content-Type", "application/xml");
+        req.setRequestBody(xml);
+        wc.getPage(req);
+        NestedView clone = (NestedView) rule.jenkins.getView("clone");
+        assertNotNull(clone);
+        assertEquals(rule.jenkins, clone.getOwner());
+        child = (NestedView) clone.getView("child");
+        assertNotNull(child);
+        assertEquals(clone, child.getOwner());
+        wc.goTo("view/clone/view/child/");
+        // Now try replacing an existing view (View.doConfigDotXml → View.updateByXml):
+        req = new WebRequestSettings(wc.createCrumbedUrl("view/parent/config.xml"), HttpMethod.POST);
+        req.setAdditionalHeader("Content-Type", "application/xml");
+        req.setRequestBody(xml);
+        wc.getPage(req);
+        parent = (NestedView) rule.jenkins.getView("parent");
+        assertNotNull(parent);
+        assertEquals(rule.jenkins, parent.getOwner());
+        child = (NestedView) parent.getView("child");
+        assertNotNull(child);
+        assertEquals(parent, child.getOwner());
+        wc.goTo("view/parent/view/child/");
+    }
+
     //nested view should be reloadable from config.xml which it provides
     @Test
     public void testDotConfigXmlOwnerSettings() throws Exception{

@@ -57,6 +57,7 @@ import jenkins.model.ModelObjectWithContextMenu;
 import org.apache.commons.jelly.JellyException;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.Exported;
+import hudson.security.Permission;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -64,6 +65,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static hudson.Util.fixEmpty;
+import java.lang.reflect.Field;
 
 /**
  * View type that contains only another set of views.
@@ -92,9 +94,29 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         super(name);
     }
 
+    private Object readResolve() throws Exception {
+        // Unfortunately various methods which set View.owner are inappropriate here.
+        Field ownerF = View.class.getDeclaredField("owner");
+        ownerF.setAccessible(true);
+        for (View view : views) {
+            ownerF.set(view, this);
+        }
+        return this;
+    }
+
     public List<TopLevelItem> getItems() {
         return Collections.emptyList();
     }
+    
+	@Override
+	public boolean hasPermission(Permission p) {
+		for (View view : views) {
+			if (view.hasPermission(p)) {
+				return true;
+			}
+		}
+		return super.hasPermission(p);
+	}
 
     public boolean contains(TopLevelItem item) {
         return false;
