@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Bug;
@@ -53,10 +54,10 @@ import org.jvnet.hudson.test.JenkinsRule.WebClient;
  * @author Alan Harder
  */
 public class NestedViewTest {
-    
+
     @Rule
     public JenkinsRule rule = new JenkinsRule();
-    
+
     @Test
     public void test() throws Exception {
         rule.createFreeStyleProject("Abcd");
@@ -224,9 +225,9 @@ public class NestedViewTest {
         assertEquals("ListView subview should have correct woner.",root, root.getView("new").getOwner());
         NestedView subview = (NestedView) root.getView("nestedViewlvl1");
         assertEquals("Nested subview of subview should have correct woner.",subview, subview.getView("nestedViewlvl2").getOwner());
-        assertEquals("Listview subview of subview should have correct woner.",subview, subview.getView("nestedViewlvl2").getOwner());  
+        assertEquals("Listview subview of subview should have correct woner.",subview, subview.getView("nestedViewlvl2").getOwner());
     }
-    
+
     @Ignore("TODO pending baseline with https://github.com/jenkinsci/jenkins/pull/1798")
     @Issue("JENKINS-25276")
     @Test
