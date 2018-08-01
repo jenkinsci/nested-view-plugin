@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Bug;
@@ -53,10 +54,10 @@ import org.jvnet.hudson.test.JenkinsRule.WebClient;
  * @author Alan Harder
  */
 public class NestedViewTest {
-    
+
     @Rule
     public JenkinsRule rule = new JenkinsRule();
-    
+
     @Test
     public void test() throws Exception {
         rule.createFreeStyleProject("Abcd");
@@ -163,7 +164,7 @@ public class NestedViewTest {
         // First try creating a clone of this view (Jenkins.doCreateView → View.create → View.createViewFromXML):
         // TODO wc.createCrumbedUrl does not work when you are specifying your own query parameters
         CrumbIssuer issuer = rule.jenkins.getCrumbIssuer();
-        WebRequestSettings req = new WebRequestSettings(new URL(rule.getURL(), "/createView?name=clone&" + issuer.getDescriptor().getCrumbRequestField() + "=" + issuer.getCrumb(null)), HttpMethod.POST);
+        WebRequest req = new WebRequest(new URL(rule.getURL(), "/createView?name=clone&" + issuer.getDescriptor().getCrumbRequestField() + "=" + issuer.getCrumb(null)), HttpMethod.POST);
         req.setAdditionalHeader("Content-Type", "application/xml");
         req.setRequestBody(xml);
         wc.getPage(req);
@@ -175,7 +176,7 @@ public class NestedViewTest {
         assertEquals(clone, child.getOwner());
         wc.goTo("view/clone/view/child/");
         // Now try replacing an existing view (View.doConfigDotXml → View.updateByXml):
-        req = new WebRequestSettings(wc.createCrumbedUrl("view/parent/config.xml"), HttpMethod.POST);
+        req = new WebRequest(wc.createCrumbedUrl("view/parent/config.xml"), HttpMethod.POST);
         req.setAdditionalHeader("Content-Type", "application/xml");
         req.setRequestBody(xml);
         wc.getPage(req);
@@ -224,9 +225,9 @@ public class NestedViewTest {
         assertEquals("ListView subview should have correct woner.",root, root.getView("new").getOwner());
         NestedView subview = (NestedView) root.getView("nestedViewlvl1");
         assertEquals("Nested subview of subview should have correct woner.",subview, subview.getView("nestedViewlvl2").getOwner());
-        assertEquals("Listview subview of subview should have correct woner.",subview, subview.getView("nestedViewlvl2").getOwner());  
+        assertEquals("Listview subview of subview should have correct woner.",subview, subview.getView("nestedViewlvl2").getOwner());
     }
-    
+
     @Ignore("TODO pending baseline with https://github.com/jenkinsci/jenkins/pull/1798")
     @Issue("JENKINS-25276")
     @Test
