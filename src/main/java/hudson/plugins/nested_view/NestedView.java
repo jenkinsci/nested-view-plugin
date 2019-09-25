@@ -53,6 +53,7 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.views.ListViewColumn;
 import hudson.views.ViewsTabBar;
+import jenkins.model.Jenkins;
 import jenkins.model.ModelObjectWithContextMenu;
 import org.apache.commons.jelly.JellyException;
 import org.kohsuke.stapler.*;
@@ -255,7 +256,13 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     }
 
     public void save() throws IOException {
-        owner.save();
+        if (owner != null) {
+            owner.save();
+        }
+        else{
+            setOwner(Jenkins.getInstance());
+            owner.save();
+        }
     }
 
     public void doCreateView(StaplerRequest req, StaplerResponse rsp)
