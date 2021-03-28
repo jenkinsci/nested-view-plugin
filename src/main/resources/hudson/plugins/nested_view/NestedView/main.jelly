@@ -60,7 +60,7 @@ THE SOFTWARE.
           <j:forEach var="v" items="${it.views}">
             <tr>
               <td style="padding-left:5px;width:20px">
-                <img src="${imagesURL}/${iconSize}/folder.gif" alt=""/>
+                <img src="${imagesURL}/${iconSize}/${it.getImage(v)}" alt=""/>
               </td>
               <j:if test="${optionalColumns.showStatusColumn}">
                 <j:set var="result" value="${it.getWorstResult(v)}"/>
