@@ -246,4 +246,18 @@ public class NestedViewTest {
         project.renameTo("project-renamed");
         assertTrue("Subview contains renamed item.", subview.contains(project));
     }
+
+    @Issue("JENKINS-59466")
+    @Test
+    public void testSetViewNoOwner() throws IOException{
+        FreeStyleProject project = rule.createFreeStyleProject("project");
+        NestedView view = new NestedView("nested");
+        //This should add a view owned by the Jenkins user since there is "no owner"
+        rule.jenkins.addView(view);
+        assertEquals("Jenkins", view.getOwner().getDisplayName());
+        ListView subview = new ListView("listView", view);
+        view.addView(subview);
+        subview.add(project);
+        assertTrue("Subview 'listView' should contains item 'project'", subview.contains(project));
+    }
 }
