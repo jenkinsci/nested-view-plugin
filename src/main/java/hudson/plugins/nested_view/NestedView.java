@@ -275,6 +275,13 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         this.owner = owner;
     }
 
+    public String getImage(View w) {
+        if (w instanceof  NestedView) {
+            return "folder.gif";
+        } else {
+            return "clipboard.png";
+        }
+    }
     /**
      * Returns the worst result for this nested view.
      * <p>To get the worst result, this method browses all the jobs this view
