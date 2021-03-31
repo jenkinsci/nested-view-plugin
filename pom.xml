@@ -14,7 +14,7 @@
   <artifactId>nested-view</artifactId>
   <packaging>hpi</packaging>
   <name>Nested View Plugin</name>
-  <version>1.18-SNAPSHOT</version>
+  <version>1.18</version>
   <url>https://wiki.jenkins.io/display/JENKINS/Nested+View+Plugin</url>
 
   <developers>
@@ -28,7 +28,7 @@
     <connection>scm:git:git://github.com/jenkinsci/nested-view-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/nested-view-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/nested-view-plugin</url>
-    <tag>HEAD</tag>
+    <tag>1.18</tag>
   </scm>
 
   <repositories>
