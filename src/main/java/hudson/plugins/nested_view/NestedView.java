@@ -105,6 +105,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         return this;
     }
 
+    @Override
     public List<TopLevelItem> getItems() {
         return Collections.emptyList();
     }
@@ -119,14 +120,17 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
 		return super.hasPermission(p);
 	}
 
+    @Override
     public boolean contains(TopLevelItem item) {
         return false;
     }
 
+    @Override
     public ContextMenu doContextMenu(StaplerRequest request, StaplerResponse response) throws IOException, JellyException {
         return new ContextMenu().from(this, request, response);
     }
 
+    @Override
     public ContextMenu doChildrenContextMenu(StaplerRequest request, StaplerResponse response) throws Exception {
         ContextMenu menu = new ContextMenu();
         for (View view : getViews()) {
@@ -155,6 +159,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         return getOwner().getViewActions();
     }
 
+    @Override
     public Item doCreateItem(StaplerRequest req, StaplerResponse rsp)
             throws IOException, ServletException {
         ItemGroup itemGroup = getItemGroup();
@@ -218,10 +223,12 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         columns.updateFromForm(req, req.getSubmittedForm(), "columnsToShow");
     }
 
+    @Override
     public boolean canDelete(View view) {
         return true;
     }
 
+    @Override
     public void deleteView(View view) throws IOException {
         views.remove(view);
         save();
@@ -234,6 +241,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         return copy;
     }
 
+    @Override
     public View getView(String name) {
         for (View v : views)
             if (v.getViewName().equals(name))
@@ -251,10 +259,12 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         return columns;
     }
 
+    @Override
     public void onViewRenamed(View view, String oldName, String newName) {
         // noop
     }
 
+    @Override
     public void save() throws IOException {
         if (owner != null) {
             owner.save();
@@ -555,6 +565,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         }
     }
 
+    @Override
     public ViewsTabBar getViewsTabBar() {
         return Hudson.getInstance().getViewsTabBar();
     }
@@ -579,6 +590,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         }
     }
 
+    @Override
     public Object getTarget() {
         // Proxy to handle redirect when a default subview is configured
         return (getDefaultView() != null &&
@@ -600,8 +612,8 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
      * Handle owner attribute
      */
     public class OwnerConvertor implements Converter {
-       
 
+        @Override
         public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
             XStream stream = new XStream();
             if(source.equals(owner)){
@@ -612,6 +624,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
            
         }
 
+        @Override
         public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
             if(reader.getAttribute("ignore")!=null && reader.getAttribute("ignore").equals("true")){
                 return owner;
@@ -621,6 +634,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
             return o;
         }
 
+        @Override
         public boolean canConvert(Class type) {
             return ViewGroup.class.isAssignableFrom(type);
         }
