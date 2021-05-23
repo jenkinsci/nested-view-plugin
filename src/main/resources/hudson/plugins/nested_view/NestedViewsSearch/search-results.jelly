@@ -1,0 +1,24 @@
+<?jelly escape-by-default='false'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
+    <j:set var="q" value="${request.getParameter('q')}"/>
+    <j:new var="h" className="hudson.Functions"/>
+    <!-- needed for printing title. -->
+    <l:layout title="${%Search for} '${q}'">
+        <l:side-panel>
+            <h2><img src="${rootURL}/images/16x16/help.png" /> Search help</h2>
+            <h3>${%Supported keywords with an example}</h3>
+            <p>${it.getSearchHelp()}</p>
+        </l:side-panel>
+        <l:main-panel>
+            <j:set var="hits" value="${it.hits}"/>
+            <h1>${%Search for} '${q}' returned: ${hits.size()}</h1>
+            <ol>
+                            <j:forEach var="hit" items="${hits}">
+                                <li>
+                                        <a href="${hit.getSearchUrl()}">${hit.getSearchName()}</a>
+                                </li>
+                            </j:forEach>
+            </ol>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>
