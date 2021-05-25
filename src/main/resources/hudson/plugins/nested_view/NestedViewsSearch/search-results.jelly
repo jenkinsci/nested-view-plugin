@@ -7,7 +7,13 @@
         <l:side-panel>
             <h2><img src="${rootURL}/images/16x16/help.png" /> Search help</h2>
             <h3>${%Supported keywords with an example}</h3>
-            <p>${it.getSearchHelp()}</p>
+            <ol>
+                 <j:forEach var="help" items="${it.getSearchHelp()}">
+                     <li>
+                     <b>-${help.getKey()}:</b> ${help.getDescription()}
+                     </li>
+                </j:forEach>
+            </ol>
         </l:side-panel>
         <l:main-panel>
             <j:set var="hits" value="${it.hits}"/>
