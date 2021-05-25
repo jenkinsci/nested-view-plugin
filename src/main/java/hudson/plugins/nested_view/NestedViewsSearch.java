@@ -149,9 +149,9 @@ public class NestedViewsSearch extends Search {
 
         public String getUrl() {
             if (item instanceof FreeStyleProject) {
-                return "../job/" + name;
+                return "../../../../../../../../../../../../../../job/" + name;
             } else {
-                return "../" + getFullPath().replace("/", "/view/");
+                return "../../../../../../../../../../../../../../" + getFullPath().replace("/", "/view/");
             }
         }
 
@@ -303,6 +303,7 @@ public class NestedViewsSearch extends Search {
         String query = req.getParameter("q");
         if (query != null) {
             this.query = new Query(query);
+            //limit to at least 2 character(with .* ommited out)
             for (NamableWithClass item : allCache) {
                 if (item.matches(this.query)) {
                     hits.add(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl()));
@@ -310,6 +311,7 @@ public class NestedViewsSearch extends Search {
             }
         }
         Collections.sort(hits);
+        //todo, add paging &start=&count= .. defaulting to 0 and somwhere on 1000. Probably add next/prev links to jelly. Include `showing x/form` in jelly
         RequestDispatcher v = req.getView(this, "search-results.jelly");
         v.forward(req, rsp);
     }
@@ -317,8 +319,10 @@ public class NestedViewsSearch extends Search {
     @Override
     public SearchResult getSuggestions(final StaplerRequest req, @QueryParameter final String query) {
         SearchResult suggestedItems = super.getSuggestions(req, query);
+        //the suggestions donot lose performance with to mch resutlst. So maybe the below todo limit is not ncessary at all
         for (NamableWithClass item : allCache) {
             this.query = new Query(query);
+            //limit to at least 2 character(with .* ommited out)
             if (item.matches(this.query)) {
                 suggestedItems.add(new SuggestedItem(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl())));
             }
