@@ -31,6 +31,8 @@ import hudson.util.IOException2;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+
+import javax.xml.XMLConstants;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -505,10 +507,12 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
             // this allows us to use UTF-8 for storing data,
             // plus it checks any well-formedness issue in the submitted
             // data
-            Transformer t = TransformerFactory.newInstance()
-                    .newTransformer();
-            t.transform(source,
-                    new StreamResult(out));
+            TransformerFactory factory = TransformerFactory.newInstance();
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+            Transformer t = factory.newTransformer();
+            t.transform(source, new StreamResult(out));
             out.close();
         } catch (TransformerException e) {
             throw new IOException2("Failed to persist configuration.xml", e);
