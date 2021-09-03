@@ -148,10 +148,14 @@ public class NestedViewsSearch extends Search {
         }
 
         public String getUrl() {
+            String rootUrl = Jenkins.get().getRootUrl();
+            if(rootUrl.endsWith("/")){
+                rootUrl = rootUrl.substring(0, rootUrl.length()-1);
+            }
             if (item instanceof FreeStyleProject) {
-                return "../../../../../../../../../../../../../../job/" + name;
+                return rootUrl + "/job/" + name;
             } else {
-                return "../../../../../../../../../../../../../../" + getFullPath().replace("/", "/view/");
+                return rootUrl + getFullPath().replace("/", "/view/");
             }
         }
 

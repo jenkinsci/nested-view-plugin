@@ -40,6 +40,7 @@ import static hudson.util.FormValidation.Kind.*;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+
 import static org.junit.Assert.*;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -259,5 +260,36 @@ public class NestedViewTest {
         view.addView(subview);
         subview.add(project);
         assertTrue("Subview 'listView' should contains item 'project'", subview.contains(project));
+    }
+
+    @Test
+    public void testSearchWithPrefix() throws Exception {
+        WebClient wc = rule.createWebClient();
+
+        // Create a job
+        rule.createFreeStyleProject("test-job");
+        // Create a new nested view
+        HtmlForm form = wc.goTo("newView").getFormByName("createItem");
+        form.getInputByName("name").setValueAttribute("test-nest");
+        form.getInputByValue("hudson.plugins.nested_view.NestedView").setChecked(true);
+        rule.submit(form);
+        // Add some subviews
+        form = wc.goTo("view/test-nest/newView").getFormByName("createItem");
+        form.getInputByName("name").setValueAttribute("subview");
+        form.getInputByValue("hudson.model.ListView").setChecked(true);
+        form = rule.submit(form).getFormByName("viewConfig");
+        form.getInputByName("useincluderegex").setChecked(true);
+        form.getInputByName("includeRegex").setValueAttribute(".*job");
+        rule.submit(form);
+
+        // Perform some searches. Results should contain urls with prefix
+        HtmlPage page = wc.search("test-job");
+        assertNotNull(page.getAnchorByHref(rule.getURL().toString()+"job/test-job"));
+        page = wc.search("-p: test-nest");
+        assertNotNull(page.getAnchorByHref(rule.getURL().toString()+"view/test-nest"));
+        page = wc.search("-p: subview");
+        assertNotNull(page.getAnchorByHref(rule.getURL().toString()+"view/test-nest/view/subview"));
+        page = wc.search("-f: test-nest/subview");
+        assertNotNull(page.getAnchorByHref(rule.getURL().toString()+"view/test-nest/view/subview"));
     }
 }
