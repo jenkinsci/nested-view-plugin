@@ -3,7 +3,7 @@ package hudson.plugins.nested_view;
 
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import hudson.model.FreeStyleProject;
+import hudson.model.AbstractProject;
 import hudson.model.TopLevelItem;
 import hudson.model.View;
 import hudson.search.Search;
@@ -136,7 +136,7 @@ public class NestedViewsSearch extends Search {
         }
 
         public String getUsefulName() {
-            if (item instanceof FreeStyleProject) {
+            if (item instanceof AbstractProject) {
                 return name;
             } else {
                 if (item instanceof NestedView) {
@@ -152,7 +152,7 @@ public class NestedViewsSearch extends Search {
             if(rootUrl.endsWith("/")){
                 rootUrl = rootUrl.substring(0, rootUrl.length()-1);
             }
-            if (item instanceof FreeStyleProject) {
+            if (item instanceof AbstractProject) {
                 return rootUrl + "/job/" + name;
             } else {
                 return rootUrl + getFullPath().replace("/", "/view/");
@@ -173,7 +173,7 @@ public class NestedViewsSearch extends Search {
                 nameOrPath = getName();
             }
             boolean clazzPass = false;
-            if (query.where.contains("j") && (item instanceof FreeStyleProject)) {
+            if (query.where.contains("j") && (item instanceof AbstractProject)) {
                 clazzPass = true;
             }
             if (query.where.contains("w") && (item instanceof View || item instanceof NestedView)) {
@@ -231,7 +231,7 @@ public class NestedViewsSearch extends Search {
     private static transient volatile List<NamableWithClass> allCache = new ArrayList(0);
     private static transient volatile int allTTL = 0;
 
-    @SuppressFBWarnings(value = {"ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"}, justification = "allTTL and allCache are used to cache base foundation of search. Cahce is shared between insntances")
+    @SuppressFBWarnings(value = {"ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"}, justification = "allTTL and allCache are used to cache base foundation of search. Cache is shared between insntances")
     public NestedViewsSearch() {
         //this is very very naive caching and refreshing of results
         allTTL--;
@@ -240,7 +240,7 @@ public class NestedViewsSearch extends Search {
             List<NamableWithClass> all = new ArrayList(1000);
             Jenkins j = Jenkins.get();
             for (TopLevelItem ti : j.getItems()) {
-                if (ti instanceof FreeStyleProject) {
+                if (ti instanceof AbstractProject) {
                     all.add(new NamableWithClass(ti, ti.getName(), ti.getName()));
                 }
             }
@@ -291,7 +291,7 @@ public class NestedViewsSearch extends Search {
         }
 
         @Override
-        @SuppressFBWarnings(value = {"EQ_COMPARETO_USE_OBJECT_EQUALS"}, justification = "intentional. We chack the types when filling the allCached, and the classes have not much in common")
+        @SuppressFBWarnings(value = {"EQ_COMPARETO_USE_OBJECT_EQUALS"}, justification = "intentional. We check the types when filling the allCached, and the classes have not much in common")
         public int compareTo(Object o) {
             return this.toString().length() - o.toString().length();
         }
@@ -307,7 +307,7 @@ public class NestedViewsSearch extends Search {
         String query = req.getParameter("q");
         if (query != null) {
             this.query = new Query(query);
-            //limit to at least 2 character(with .* ommited out)
+            //limit to at least 2 character(with .* omitted out)
             for (NamableWithClass item : allCache) {
                 if (item.matches(this.query)) {
                     hits.add(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl()));
@@ -323,10 +323,10 @@ public class NestedViewsSearch extends Search {
     @Override
     public SearchResult getSuggestions(final StaplerRequest req, @QueryParameter final String query) {
         SearchResult suggestedItems = super.getSuggestions(req, query);
-        //the suggestions donot lose performance with to mch resutlst. So maybe the below todo limit is not ncessary at all
+        //the suggestions dont lose performance with to much results. So maybe the below todo limit is not ncessary at all
         for (NamableWithClass item : allCache) {
             this.query = new Query(query);
-            //limit to at least 2 character(with .* ommited out)
+            //limit to at least 2 character(with .* omitted out)
             if (item.matches(this.query)) {
                 suggestedItems.add(new SuggestedItem(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl())));
             }
@@ -357,14 +357,14 @@ public class NestedViewsSearch extends Search {
         List<HelpItem> r = new ArrayList<>();
         r.add(new HelpItem("the modifier(s) must start with `-` and end with `:`", ""));
         r.add(new HelpItem("r", "regex. Regex will be used also if query contains .*"));
-        r.add(new HelpItem("R", "regex, but appended and preppended by .*"));
+        r.add(new HelpItem("R", "regex, but appended and prepended by .*"));
         r.add(new HelpItem("c", "contains (default)"));
         r.add(new HelpItem("s", "starts with"));
         r.add(new HelpItem("e", "ends with"));
         r.add(new HelpItem("q", "equals"));
         r.add(new HelpItem("Q", "equals honoring case"));
-        r.add(new HelpItem("a", "and - query will be splitted on spaces, and all must match"));
-        r.add(new HelpItem("o", "or - query will be splitted on spaces, and at least one must match"));
+        r.add(new HelpItem("a", "and - query will be split on spaces, and all must match"));
+        r.add(new HelpItem("o", "or - query will be split on spaces, and at least one must match"));
         r.add(new HelpItem("p", "match just name"));
         r.add(new HelpItem("f", "match full path (default)"));
         r.add(new HelpItem("j", "search only in jobs (default is in all -jw (-jvn))"));
