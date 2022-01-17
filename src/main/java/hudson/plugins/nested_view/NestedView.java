@@ -296,7 +296,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
 
     public String getImage(View w) {
         if (w instanceof  NestedView) {
-            return "folder.gif";
+            return "folder.png";
         } else {
             return "clipboard.png";
         }
