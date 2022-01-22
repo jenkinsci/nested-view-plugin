@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -30,6 +31,8 @@ import java.util.regex.Pattern;
 public class NestedViewsSearch extends Search {
 
     private static class Query {
+
+        private static final int MIN_LENGTH = 2;
 
         private final String original;
         private final String withoutArguments;
@@ -113,6 +116,25 @@ public class NestedViewsSearch extends Search {
                     how = "r";
                 }
             }
+        }
+
+        public boolean isNonTrivial(boolean suggesting) {
+            final String loriginal;
+            if (original == null) {
+                loriginal = "";
+            } else {
+                loriginal = original.trim();
+            }
+            final String lwithout;
+            if (withoutArguments == null) {
+                lwithout = "";
+            } else {
+                lwithout = withoutArguments.trim();
+            }
+            return !loriginal.equals(".*")
+                    && loriginal.length() >= MIN_LENGTH
+                    && !lwithout.equals(".*")
+                    && lwithout.length() >= MIN_LENGTH;
         }
     }
 
@@ -230,13 +252,18 @@ public class NestedViewsSearch extends Search {
 
     private static transient volatile List<NamableWithClass> allCache = new ArrayList(0);
     private static transient volatile int allTTL = 0;
+    private static transient volatile Date lastRefresh = new Date(0);
+    private static final long refreshTimeout = 10l * 60l * 1000l;
+    private static final int refreshAmount = 20;
 
     @SuppressFBWarnings(value = {"ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"}, justification = "allTTL and allCache are used to cache base foundation of search. Cache is shared between insntances")
     public NestedViewsSearch() {
-        //this is very very naive caching and refreshing of results
+        Date currentSearch = new Date();
+        long timeDiff = currentSearch.getTime() - lastRefresh.getTime();
         allTTL--;
-        if (allTTL <= 0) {
-            allTTL = 20;
+        if (allTTL <= 0 || timeDiff > refreshTimeout) {
+            allTTL = refreshAmount;
+            lastRefresh = currentSearch;
             List<NamableWithClass> all = new ArrayList(1000);
             Jenkins j = Jenkins.get();
             for (TopLevelItem ti : j.getItems()) {
@@ -290,6 +317,10 @@ public class NestedViewsSearch extends Search {
             return searchName;
         }
 
+        public String toPlainOldHref() {
+            return "<a href=\"" + searchUrl + "\">" + searchName + "</a>";
+        }
+
         @Override
         @SuppressFBWarnings(value = {"EQ_COMPARETO_USE_OBJECT_EQUALS"}, justification = "intentional. We check the types when filling the allCached, and the classes have not much in common")
         public int compareTo(Object o) {
@@ -307,10 +338,11 @@ public class NestedViewsSearch extends Search {
         String query = req.getParameter("q");
         if (query != null) {
             this.query = new Query(query);
-            //limit to at least 2 character(with .* omitted out)
-            for (NamableWithClass item : allCache) {
-                if (item.matches(this.query)) {
-                    hits.add(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl()));
+            if (this.query.isNonTrivial(false)) {
+                for (NamableWithClass item : allCache) {
+                    if (item.matches(this.query)) {
+                        hits.add(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl()));
+                    }
                 }
             }
         }
@@ -323,12 +355,12 @@ public class NestedViewsSearch extends Search {
     @Override
     public SearchResult getSuggestions(final StaplerRequest req, @QueryParameter final String query) {
         SearchResult suggestedItems = super.getSuggestions(req, query);
-        //the suggestions dont lose performance with to much results. So maybe the below todo limit is not ncessary at all
-        for (NamableWithClass item : allCache) {
-            this.query = new Query(query);
-            //limit to at least 2 character(with .* omitted out)
-            if (item.matches(this.query)) {
-                suggestedItems.add(new SuggestedItem(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl())));
+        this.query = new Query(query);
+        if (this.query.isNonTrivial(true)) {
+            for (NamableWithClass item : allCache) {
+                if (item.matches(this.query)) {
+                    suggestedItems.add(new SuggestedItem(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl())));
+                }
             }
         }
         return suggestedItems;
