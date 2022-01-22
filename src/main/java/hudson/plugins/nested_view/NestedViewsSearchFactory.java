@@ -4,16 +4,24 @@ import hudson.Extension;
 import hudson.search.Search;
 import hudson.search.SearchFactory;
 import hudson.search.SearchableModelObject;
-import jenkins.model.Jenkins;
 
-import javax.inject.Inject;
-
+import java.io.File;
 
 @Extension
 public class NestedViewsSearchFactory extends SearchFactory {
 
     @Override
     public Search createFor(final SearchableModelObject owner) {
-        return new NestedViewsSearch();
+        String userHomeDir = System.getProperty("user.home");
+        if (userHomeDir == null) {
+            return new NestedViewsSearch();
+        } else {
+            File nestedViewsFile = new File(userHomeDir, ".nestedViewsSearch");
+            if (nestedViewsFile.exists()) {
+                return new Search();
+            } else {
+                return new NestedViewsSearch();
+            }
+        }
     }
 }
