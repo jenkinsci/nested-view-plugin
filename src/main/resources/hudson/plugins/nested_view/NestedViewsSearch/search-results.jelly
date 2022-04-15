@@ -5,7 +5,7 @@
     <!-- needed for printing title. -->
     <l:layout title="${%Search for} '${q}'">
         <l:side-panel>
-            <h2><img src="${rootURL}/images/16x16/help.png" /> Search help</h2>
+            <h2><l:icon class="icon-help icon-sm" /> Search help</h2>
             <h3>${%Supported keywords with an example}</h3>
             <ol>
                  <j:forEach var="help" items="${it.getSearchHelp()}">
