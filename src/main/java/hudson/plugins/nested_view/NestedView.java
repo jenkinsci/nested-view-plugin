@@ -184,7 +184,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         
         // already exists?
         if (getView(name) != null) 
-            return FormValidation.error(hudson.model.Messages.Hudson_ViewAlreadyExists(name));
+            return FormValidation.error("View already exists");
         
         // good view name?
         try {
@@ -204,7 +204,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
 
         String view = fixEmpty(value);
         return (view == null || getView(view) == null) ? FormValidation.ok()
-                : FormValidation.error(hudson.model.Messages.Hudson_ViewAlreadyExists(view));
+                : FormValidation.error("View already exists");
     }
 
     @Override
