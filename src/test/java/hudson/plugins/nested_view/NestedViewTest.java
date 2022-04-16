@@ -161,7 +161,7 @@ public class NestedViewTest {
         child.setOwner(parent);
         WebClient wc = rule.createWebClient();
         wc.goTo("view/parent/view/child/");
-        String xml = wc.goToXml("view/parent/config.xml").getContent();
+        String xml = wc.goToXml("view/parent/config.xml").getTextContent();
         assertFalse(xml, xml.contains("<owner"));
         // First try creating a clone of this view (Jenkins.doCreateView → View.create → View.createViewFromXML):
         // TODO wc.createCrumbedUrl does not work when you are specifying your own query parameters
