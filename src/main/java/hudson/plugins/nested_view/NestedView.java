@@ -464,8 +464,8 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         }
 
         hrc.report = hrc.count > 0
-                ? new HealthReport(hrc.sum / hrc.count, Messages._ViewHealth(hrc.count))
-                : new HealthReport(100, Messages._NoJobs());
+                ? new HealthReport(hrc.sum / hrc.count, Messages._viewHealth(hrc.count))
+                : new HealthReport(100, Messages._noJobs());
 
         return hrc;
     }
@@ -550,7 +550,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
             }
         }
         hrc.report = hrc.count > 0
-                ? new HealthReport(hrc.sum / hrc.count, Messages._ViewHealth(hrc.count))
+                ? new HealthReport(hrc.sum / hrc.count, Messages._viewHealth(hrc.count))
                 : null;
         return hrc;
     }
@@ -648,7 +648,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     @Extension
     public static final class DescriptorImpl extends ViewDescriptor {
         public String getDisplayName() {
-            return Messages.DisplayName();
+            return Messages.displayName();
         }
 
     }
