@@ -1,4 +1,4 @@
-<?jelly escape-by-default='false'?>
+<?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
     <j:set var="q" value="${request.getParameter('q')}"/>
     <j:new var="h" className="hudson.Functions"/>
