@@ -16,16 +16,16 @@ public class NestedViewsSearchFactory extends SearchFactory {
         if (userHomeDir == null) {
             return new NestedViewsSearch();
         } else {
-            File nestedViewsFileForce = new File(userHomeDir, ".nestedViewsSearchForce");
-            if (nestedViewsFileForce.exists()) {
-                return new NestedViewsSearch();
-            }
-            File nestedViewsFile = new File(userHomeDir, ".nestedViewsSearch");
-            if (nestedViewsFile.exists()) {
+            // File nestedViewsFileForce = new File(userHomeDir, ".nestedViewsSearchForce");
+            // if (nestedViewsFileForce.exists()) {
+            //     return new NestedViewsSearch();
+            // }
+            // File nestedViewsFile = new File(userHomeDir, ".nestedViewsSearch");
+            // if (nestedViewsFile.exists()) {
                 return new Search();
-            } else {
-                return new NestedViewsSearch();
-            }
+            // } else {
+            //     return new NestedViewsSearch();
+            // }
         }
     }
 }
