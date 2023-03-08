@@ -23,25 +23,33 @@
  */
 package hudson.plugins.nested_view;
 
+import com.gargoylesoftware.htmlunit.ElementNotFoundException;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.WebRequest;
+import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlOption;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.xml.XmlPage;
+
 import hudson.model.AllView;
 import hudson.model.Cause.UserCause;
 import hudson.model.FreeStyleProject;
 import hudson.model.ListView;
+
 import static hudson.model.Result.*;
+
 import hudson.security.csrf.CrumbIssuer;
+
 import static hudson.util.FormValidation.Kind.*;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
 import static org.junit.Assert.*;
+
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,9 +58,11 @@ import org.jvnet.hudson.test.FailureBuilder;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
+import org.xml.sax.SAXException;
 
 /**
  * Test interaction of nested-view plugin with Jenkins core.
+ *
  * @author Alan Harder
  */
 public class NestedViewTest {
@@ -195,13 +205,13 @@ public class NestedViewTest {
     // With update from  <jenkins.version>1.580.1 to 2.164
     // this test started to failas crumb is no longer possible via get
     @Test(expected = FailingHttpStatusCodeException.class)
-    public void testDotConfigXmlOwnerSettings() throws Exception{
+    public void testDotConfigXmlOwnerSettings() throws Exception {
         NestedView root = new NestedView("nestedRoot");
         root.setOwner(rule.jenkins);
         ListView viewLevel1 = new ListView("listViewlvl1", root);
         NestedView subviewLevel1 = new NestedView("nestedViewlvl1");
         subviewLevel1.setOwner(root);
-        NestedView subviewLevel2 = new NestedView ("nestedViewlvl2");
+        NestedView subviewLevel2 = new NestedView("nestedViewlvl2");
         subviewLevel2.setOwner(subviewLevel1);
         ListView viewLevel2 = new ListView("listViewlvl2", subviewLevel1);
         ListView viewLevel3 = new ListView("listViewlvl3", subviewLevel2);
@@ -235,7 +245,7 @@ public class NestedViewTest {
     @Ignore("TODO pending baseline with https://github.com/jenkinsci/jenkins/pull/1798")
     @Issue("JENKINS-25276")
     @Test
-    public void testRenameJob() throws IOException{
+    public void testRenameJob() throws IOException {
         FreeStyleProject project = rule.createFreeStyleProject("project");
         NestedView view = new NestedView("nested");
         view.setOwner(rule.jenkins);
@@ -250,7 +260,7 @@ public class NestedViewTest {
 
     @Issue("JENKINS-59466")
     @Test
-    public void testSetViewNoOwner() throws IOException{
+    public void testSetViewNoOwner() throws IOException {
         FreeStyleProject project = rule.createFreeStyleProject("project");
         NestedView view = new NestedView("nested");
         //This should add a view owned by the Jenkins user since there is "no owner"
@@ -262,8 +272,8 @@ public class NestedViewTest {
         assertTrue("Subview 'listView' should contains item 'project'", subview.contains(project));
     }
 
-    @Test
-    public void testSearchWithPrefix() throws Exception {
+
+    static WebClient createViewAndJobsForNEstedViewSearch(JenkinsRule rule) throws Exception {
         WebClient wc = rule.createWebClient();
 
         // Create a job
@@ -281,15 +291,27 @@ public class NestedViewTest {
         form.getInputByName("useincluderegex").setChecked(true);
         form.getInputByName("includeRegex").setValueAttribute(".*job");
         rule.submit(form);
+        return wc;
+    }
 
-        // Perform some searches. Results should contain urls with prefix
+
+    static HtmlAnchor searchAndCheck4(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
+        HtmlPage page = wc.search("-f: test-nest/subview");
+        return page.getAnchorByHref(rule.getURL().toString() + "view/test-nest/view/subview");
+    }
+
+    static HtmlAnchor searchAndCheck3(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
+        HtmlPage page = wc.search("-p: subview");
+        return page.getAnchorByHref(rule.getURL().toString() + "view/test-nest/view/subview");
+    }
+
+    static HtmlAnchor searchAndCheck2(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
+        HtmlPage page = wc.search("-p: test-nest");
+        return page.getAnchorByHref(rule.getURL().toString() + "view/test-nest");
+    }
+
+    static HtmlAnchor searchAndCheck1(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
         HtmlPage page = wc.search("test-job");
-        assertNotNull(page.getAnchorByHref(rule.getURL().toString()+"job/test-job"));
-        page = wc.search("-p: test-nest");
-        assertNotNull(page.getAnchorByHref(rule.getURL().toString()+"view/test-nest"));
-        page = wc.search("-p: subview");
-        assertNotNull(page.getAnchorByHref(rule.getURL().toString()+"view/test-nest/view/subview"));
-        page = wc.search("-f: test-nest/subview");
-        assertNotNull(page.getAnchorByHref(rule.getURL().toString()+"view/test-nest/view/subview"));
+        return page.getAnchorByHref(rule.getURL().toString() + "job/test-job");
     }
 }
