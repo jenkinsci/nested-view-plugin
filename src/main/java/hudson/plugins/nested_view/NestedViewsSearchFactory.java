@@ -37,6 +37,7 @@ public class NestedViewsSearchFactory extends SearchFactory {
                 return new Search(){
                     @Override
                     public void doIndex(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+                        //we have to reset it only in search, not during suggestions
                         super.doIndex(req, rsp);
                         resetTmpSkip();
                     }

@@ -1,4 +1,5 @@
 package hudson.plugins.nested_view;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.AbstractProject;
 import hudson.model.TopLevelItem;
@@ -9,36 +10,44 @@ import hudson.search.SearchItem;
 import hudson.search.SearchResult;
 import hudson.search.SuggestedItem;
 import jenkins.model.Jenkins;
+
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NestedViewsSearch extends Search {
 
-    private static class Query {
+    static class Query {
 
         private static final int MIN_LENGTH = 2;
 
         private final String original;
         private final String withoutArguments;
 
+        private boolean multiline;
+        private boolean projectInfo;
+        private int stats = -1;
+        private int builds = -1;
+        private int last = -1;
+
         private String where = "vnj"; //v,n,j
         private String how = "c"; //c,s,e,r,R,q,Q
         private String bool = ""; //a,o,""
         private String part = "f"; //p,f
-        private String switches = ""; //X
         private boolean invert = false;
 
         public Query(boolean search, String ooriginal) {
@@ -61,7 +70,6 @@ public class NestedViewsSearch extends Search {
                     how = "r";
                 }
                 if (query.contains("X") && search) {
-                    switches += "X";
                     String l = query.replaceAll(".*X", "");
                     int n = 1;
                     if (l.length() > 0) {
@@ -73,6 +81,34 @@ public class NestedViewsSearch extends Search {
                         }
                     }
                     NestedViewsSearchFactory.setTmpSkip(n);
+                }
+                if (query.contains("m") && search) {
+                    multiline = true;
+                } else {
+                    multiline = false;
+                }
+                if (query.contains("P") && search) {
+                    projectInfo = true;
+                } else {
+                    projectInfo = false;
+                }
+                if (query.contains("S") && search) {
+                    stats = getNumber(query, "S", 10);
+                } else {
+                    stats = -1;
+                }
+                if (query.contains("B") && search) {
+                    builds = getNumber(query, "B", 10);
+                } else {
+                    builds = -1;
+                }
+                if (query.contains("L") && search) {
+                    last = getNumber(query, "L", 0);
+                    if (last == 0) { //it can be set also by user
+                        last = 1234567;
+                    }
+                } else {
+                    last = -1;
                 }
                 if (query.contains("j") || query.contains("v") || query.contains("n") || query.contains("w")) {
                     where = "";
@@ -133,7 +169,36 @@ public class NestedViewsSearch extends Search {
             }
         }
 
-        //@SuppressFBWarnings(value = {"ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"}, justification = "Well if severalusers searches in aprralel this would be evil")
+        private int getNumber(String query, String switcher, int n) {
+            String l = query.replaceAll(".*" + switcher, "");
+            l = l.replaceAll("[^0-9].*", "");
+            try {
+                n = Integer.parseInt(l);
+            } catch (Exception ex) {
+                //ok
+            }
+            return n;
+        }
+
+        public boolean isMultiline() {
+            return multiline;
+        }
+
+        public boolean isProjectInfo() {
+            return projectInfo;
+        }
+
+        public int getStats() {
+            return stats;
+        }
+
+        public int getBuilds() {
+            return builds;
+        }
+
+        public int getLast() {
+            return last;
+        }
 
         public boolean isNonTrivial(boolean suggesting) {
             final String loriginal;
@@ -155,7 +220,7 @@ public class NestedViewsSearch extends Search {
         }
     }
 
-    private static class NamableWithClass {
+    static class NamableWithClass {
         private final String name;
         private final String fullPath;
         private Object item;
@@ -188,8 +253,8 @@ public class NestedViewsSearch extends Search {
 
         public String getUrl() {
             String rootUrl = Jenkins.get().getRootUrl();
-            if(rootUrl.endsWith("/")){
-                rootUrl = rootUrl.substring(0, rootUrl.length()-1);
+            if (rootUrl.endsWith("/")) {
+                rootUrl = rootUrl.substring(0, rootUrl.length() - 1);
             }
             if (item instanceof AbstractProject) {
                 return rootUrl + "/job/" + name;
@@ -265,6 +330,14 @@ public class NestedViewsSearch extends Search {
                 return nameOrPath.contains(queryOrPart);
             }
         }
+
+        public Optional<AbstractProject> getProject() {
+            if (item instanceof AbstractProject) {
+                return Optional.of((AbstractProject) item);
+            } else {
+                return Optional.empty();
+            }
+        }
     }
 
     private static transient volatile List<NamableWithClass> allCache = new ArrayList(0);
@@ -305,9 +378,10 @@ public class NestedViewsSearch extends Search {
         }
     }
 
-    private static class NestedViewsSearchResult implements SearchItem, Comparable {
+    private static class NestedViewsSearchResult implements SearchItem, Comparable, ExtendedSearch {
         private final String searchName;
         private final String searchUrl;
+        private final ProjectWrapper project;
 
         @Override
         public String getSearchName() {
@@ -324,9 +398,14 @@ public class NestedViewsSearch extends Search {
             return null;
         }
 
-        public NestedViewsSearchResult(String searchName, String searchUrl) {
+        public NestedViewsSearchResult(String searchName, String searchUrl, Optional<AbstractProject> project, Query query) {
             this.searchName = searchName;
             this.searchUrl = searchUrl;
+            if (query != null) {
+                this.project = new ProjectWrapper(project, query.isMultiline(), query.isProjectInfo(), query.getStats(), query.getLast(), query.getBuilds(), query);
+            } else {
+                this.project = new ProjectWrapper(Optional.empty(), false, false, -1, -1, -1, null);
+            }
         }
 
         @Override
@@ -343,6 +422,11 @@ public class NestedViewsSearch extends Search {
         public int compareTo(Object o) {
             return this.toString().length() - o.toString().length();
         }
+
+        @Override
+        public ProjectWrapper getProject() {
+            return project;
+        }
     }
 
     private final static Logger LOGGER = Logger.getLogger(Search.class.getName());
@@ -358,7 +442,7 @@ public class NestedViewsSearch extends Search {
             if (this.query.isNonTrivial(false)) {
                 for (NamableWithClass item : allCache) {
                     if (item.matches(this.query)) {
-                        hits.add(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl()));
+                        hits.add(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl(), item.getProject(), this.query));
                     }
                 }
             }
@@ -376,7 +460,7 @@ public class NestedViewsSearch extends Search {
         if (this.query.isNonTrivial(true)) {
             for (NamableWithClass item : allCache) {
                 if (item.matches(this.query)) {
-                    suggestedItems.add(new SuggestedItem(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl())));
+                    suggestedItems.add(new SuggestedItem(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl(), item.getProject(), null)));
                 }
             }
         }
@@ -423,6 +507,14 @@ public class NestedViewsSearch extends Search {
         r.add(new HelpItem("!", "invert result"));
         r.add(new HelpItem("Xn", "for NEXTn searches Nested View search will be turned off. n is optional number 1-9"));
         r.add(new HelpItem("eg \"-Rjo: dacapo sp[ei]c\"", "will find all Jobs which Matches .*dacapo.* or .*sp[ei]c.* "));
+        r.add(new HelpItem(" Project/build details in search: ", ""));
+        r.add(new HelpItem("m", "multiline instead of singe line"));
+        r.add(new HelpItem("P", "will include project details"));
+        r.add(new HelpItem("Ln", "will add information about last builds. Can be followed by mask of numbers 1-last,2-stable,3-green,4-yellow,5-red,6-unsuccess,7-completed"));
+        r.add(new HelpItem("Bn", "details about builds. N is limiting am amount of builds. Default is 10!"));
+        r.add(new HelpItem("Sn", "statistics (like weather, but in numbers). N is limiting am amount of builds. Default is 10!"));
+        r.add(new HelpItem("S x B", "If both S and B are provided, the bigger of those numbers is taken, as in both cases jobs must be iterated"));
+        r.add(new HelpItem("D", "will search also in DisplayName. In addition it sets `-oB` as OR and Build details are required for it to work"));
         return r;
     }
 

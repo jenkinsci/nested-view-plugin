@@ -1,5 +1,5 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
     <j:set var="q" value="${request.getParameter('q')}"/>
     <j:new var="h" className="hudson.Functions"/>
     <!-- needed for printing title. -->
@@ -16,14 +16,25 @@
             </ol>
             <small>This is Nested View plugin search extension</small><br/>
             <small>You can turn this on/off in jenkins global settings</small>
+            <small>You can turn this off temporarily by including X to query</small>
         </l:side-panel>
         <l:main-panel>
             <j:set var="hits" value="${it.hits}"/>
             <h1>${%Search for} '${q}' returned: ${hits.size()}</h1>
             <ol>
-                            <j:forEach var="hit" items="${hits}">
+                            <j:forEach var="hit" items="${hits}"> <!-- NestedViewsSearch.NestedViewsSearchResult -->
                                 <li>
                                         <a href="${hit.getSearchUrl()}">${hit.getSearchName()}</a>
+                                        <j:forEach var="detail" items="${hit.project.getDetails()}">  <!-- ProjectWrapper.getDetails() -->
+                                            <j:choose>
+                                                <j:when test="${hit.project.isMultiline()}">
+                                                    ${detail}<br/>
+                                                </j:when>
+                                                <j:otherwise>
+                                                    ${detail};<st:nbsp/>
+                                                </j:otherwise>
+                                            </j:choose>
+                                        </j:forEach>
                                 </li>
                             </j:forEach>
             </ol>
