@@ -1,7 +1,4 @@
 package hudson.plugins.nested_view;
-
-
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.AbstractProject;
 import hudson.model.TopLevelItem;
@@ -41,9 +38,13 @@ public class NestedViewsSearch extends Search {
         private String how = "c"; //c,s,e,r,R,q,Q
         private String bool = ""; //a,o,""
         private String part = "f"; //p,f
+        private String switches = ""; //X
         private boolean invert = false;
 
-        public Query(String ooriginal) {
+        public Query(boolean search, String ooriginal) {
+            if (search) {
+                NestedViewsSearchFactory.resetTmpSkip();
+            }
             this.original = ooriginal.trim();
             String query = null;
             try {
@@ -58,6 +59,20 @@ public class NestedViewsSearch extends Search {
                 withoutArguments = original.replace(query, "").trim();
                 if (withoutArguments.contains(".*")) {
                     how = "r";
+                }
+                if (query.contains("X") && search) {
+                    switches += "X";
+                    String l = query.replaceAll(".*X", "");
+                    int n = 1;
+                    if (l.length() > 0) {
+                        try {
+                            l = l.substring(0, 1);
+                            n = Integer.parseInt(l);
+                        } catch (Exception ex) {
+                            //ok
+                        }
+                    }
+                    NestedViewsSearchFactory.setTmpSkip(n);
                 }
                 if (query.contains("j") || query.contains("v") || query.contains("n") || query.contains("w")) {
                     where = "";
@@ -117,6 +132,8 @@ public class NestedViewsSearch extends Search {
                 }
             }
         }
+
+        //@SuppressFBWarnings(value = {"ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"}, justification = "Well if severalusers searches in aprralel this would be evil")
 
         public boolean isNonTrivial(boolean suggesting) {
             final String loriginal;
@@ -337,7 +354,7 @@ public class NestedViewsSearch extends Search {
     public void doIndex(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
         String query = req.getParameter("q");
         if (query != null) {
-            this.query = new Query(query);
+            this.query = new Query(true, query);
             if (this.query.isNonTrivial(false)) {
                 for (NamableWithClass item : allCache) {
                     if (item.matches(this.query)) {
@@ -355,7 +372,7 @@ public class NestedViewsSearch extends Search {
     @Override
     public SearchResult getSuggestions(final StaplerRequest req, @QueryParameter final String query) {
         SearchResult suggestedItems = super.getSuggestions(req, query);
-        this.query = new Query(query);
+        this.query = new Query(false, query);
         if (this.query.isNonTrivial(true)) {
             for (NamableWithClass item : allCache) {
                 if (item.matches(this.query)) {
@@ -404,6 +421,7 @@ public class NestedViewsSearch extends Search {
         r.add(new HelpItem("n", "search only in nested views (default is in all -jw (-jvn))"));
         r.add(new HelpItem("w", "search only in views and nested views (default is in all -jw (-jvn))"));
         r.add(new HelpItem("!", "invert result"));
+        r.add(new HelpItem("Xn", "for NEXTn searches Nested View search will be turned off. n is optional number 1-9"));
         r.add(new HelpItem("eg \"-Rjo: dacapo sp[ei]c\"", "will find all Jobs which Matches .*dacapo.* or .*sp[ei]c.* "));
         return r;
     }

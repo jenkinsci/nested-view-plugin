@@ -25,27 +25,28 @@ package hudson.plugins.nested_view;
 
 import static org.junit.Assert.assertNotNull;
 
+import com.gargoylesoftware.htmlunit.ElementNotFoundException;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
-public class NestedViewTestSearchOn {
+public class NestedViewSearchDefaultTest {
 
     @Rule
     public JenkinsRule rule = new JenkinsRule();
 
-
     @Test
     @Issue("JENKINS-65924?")
-    public void testSearchWithPrefixOn() throws Exception {
+    public void testSearchWithPrefixDefault() throws Exception {
         WebClient wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
-        // Perform some searches with extended search on. Results should contain urls with prefix
-        NestedViewGlobalConfig.getInstance().setNestedViewSearch(true);
+        // Perform some searches. ensure extended search is on
         assertNotNull(NestedViewTest.searchAndCheck1(wc, rule));
         assertNotNull(NestedViewTest.searchAndCheck2(wc, rule));
         assertNotNull(NestedViewTest.searchAndCheck3(wc, rule));
         assertNotNull(NestedViewTest.searchAndCheck4(wc, rule));
     }
+
 }

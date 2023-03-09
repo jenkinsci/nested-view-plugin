@@ -23,17 +23,17 @@
  */
 package hudson.plugins.nested_view;
 
-import static org.junit.Assert.assertNotNull;
-
 import com.gargoylesoftware.htmlunit.ElementNotFoundException;
-
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
-public class NestedViewTestSearchOff {
+import static org.junit.Assert.assertNotNull;
+
+public class NestedViewSearchOff3Test {
 
     @Rule
     public JenkinsRule rule = new JenkinsRule();
@@ -46,43 +46,11 @@ public class NestedViewTestSearchOff {
         NestedViewGlobalConfig.getInstance().setNestedViewSearch(false);
         Exception ex = null;
         try {
-            NestedViewTest.searchAndCheck1(wc, rule);
-        } catch (ElementNotFoundException exx) {
-            ex = exx;
-        }
-        assertNotNull(ex);
-        ex = null;
-        wc.close();
-        wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
-        // Perform some searches. ensure extended search is off
-        NestedViewGlobalConfig.getInstance().setNestedViewSearch(false);
-        try {
-            NestedViewTest.searchAndCheck2(wc, rule);
-        } catch (ElementNotFoundException exx) {
-            ex = exx;
-        }
-        assertNotNull(ex);
-        ex = null;
-        wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
-        // Perform some searches. ensure extended search is off
-        NestedViewGlobalConfig.getInstance().setNestedViewSearch(false);
-        try {
             NestedViewTest.searchAndCheck3(wc, rule);
-        } catch (ElementNotFoundException exx) {
+        } catch (FailingHttpStatusCodeException exx) {
             ex = exx;
         }
         assertNotNull(ex);
-        ex = null;
-        wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
-        // Perform some searches. ensure extended search is off
-        NestedViewGlobalConfig.getInstance().setNestedViewSearch(false);
-        try {
-            NestedViewTest.searchAndCheck4(wc, rule);
-        } catch (ElementNotFoundException exx) {
-            ex = exx;
-        }
-        assertNotNull(ex);
-        ex = null;
     }
 
 }
