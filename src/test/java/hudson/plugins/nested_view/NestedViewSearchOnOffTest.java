@@ -23,66 +23,51 @@
  */
 package hudson.plugins.nested_view;
 
-import static org.junit.Assert.assertNotNull;
-
 import com.gargoylesoftware.htmlunit.ElementNotFoundException;
-
+import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
+import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
-public class NestedViewTestSearchDefault {
+import static org.junit.Assert.assertNotNull;
+
+public class NestedViewSearchOnOffTest {
 
     @Rule
     public JenkinsRule rule = new JenkinsRule();
 
+
     @Test
     @Issue("JENKINS-65924?")
-    public void testSearchWithPrefixDefault() throws Exception {
+    public void testSearchWithPrefixOnOf() throws Exception {
         WebClient wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
-        // Perform some searches. ensure extended search is off
-        NestedViewGlobalConfig.getInstance().setNestedViewSearch(false);
+        // Perform some searches with extended search on. Results should contain urls with prefix
+        NestedViewGlobalConfig.getInstance().setNestedViewSearch(true);
+        assertNotNull(NestedViewTest.searchAndCheck1(wc, rule));
+        assertNotNull(NestedViewTest.searchAndCheck2(wc, rule));
+        assertNotNull(NestedViewTest.searchAndCheck3(wc, rule));
+        assertNotNull(NestedViewTest.searchAndCheck4(wc, rule));
+        HtmlPage page = wc.search("-r: .*nest.*");
+        HtmlAnchor html = page.getAnchorByHref(rule.getURL().toString() + "view/test-nest");
+        assertNotNull(html);
+        //second still ok
+        page = wc.search("-rX: .*nest.*");
+        html = page.getAnchorByHref(rule.getURL().toString() + "view/test-nest");
+        assertNotNull(html);
+        //X disabeld our search for next search
         Exception ex = null;
+        html = null;
+        page = null;
         try {
-            NestedViewTest.searchAndCheck1(wc, rule);
-        } catch (ElementNotFoundException exx) {
+            page = wc.search("-rX: .*nest.*");
+            html = page.getAnchorByHref(rule.getURL().toString() + "view/test-nest");
+        } catch (FailingHttpStatusCodeException exx) {
             ex = exx;
         }
         assertNotNull(ex);
-        ex = null;
-        wc.close();
-        wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
-        // Perform some searches. ensure extended search is off
-        NestedViewGlobalConfig.getInstance().setNestedViewSearch(false);
-        try {
-            NestedViewTest.searchAndCheck2(wc, rule);
-        } catch (ElementNotFoundException exx) {
-            ex = exx;
-        }
-        assertNotNull(ex);
-        ex = null;
-        wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
-        // Perform some searches. ensure extended search is off
-        NestedViewGlobalConfig.getInstance().setNestedViewSearch(false);
-        try {
-            NestedViewTest.searchAndCheck3(wc, rule);
-        } catch (ElementNotFoundException exx) {
-            ex = exx;
-        }
-        assertNotNull(ex);
-        ex = null;
-        wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
-        // Perform some searches. ensure extended search is off
-        NestedViewGlobalConfig.getInstance().setNestedViewSearch(false);
-        try {
-            NestedViewTest.searchAndCheck4(wc, rule);
-        } catch (ElementNotFoundException exx) {
-            ex = exx;
-        }
-        assertNotNull(ex);
-        ex = null;
     }
-
 }
