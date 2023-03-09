@@ -14,6 +14,8 @@
                      </li>
                 </j:forEach>
             </ol>
+            <small>This is Nested View plugin search extension</small><br/>
+            <small>You can turn this on/off in jenkins global settings</small>
         </l:side-panel>
         <l:main-panel>
             <j:set var="hits" value="${it.hits}"/>

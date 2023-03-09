@@ -15,7 +15,7 @@ import jenkins.model.GlobalConfiguration;
 public class NestedViewGlobalConfig extends GlobalConfiguration {
     private static Logger logger = Logger.getLogger(NestedViewGlobalConfig.class.getName());
 
-    boolean nestedViewSearch;
+    boolean nestedViewSearch = true;
 
     public static NestedViewGlobalConfig getInstance() {
         return GlobalConfiguration.all().get(NestedViewGlobalConfig.class);
