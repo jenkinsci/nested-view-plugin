@@ -15,7 +15,7 @@
                 </j:forEach>
             </ol>
             <small>This is Nested View plugin search extension</small><br/>
-            <small>You can turn this on/off in jenkins global settings</small>
+            <small>You can turn this on/off in jenkins global settings</small><br/>
             <small>You can turn this off temporarily by including X to query</small>
         </l:side-panel>
         <l:main-panel>
@@ -24,17 +24,36 @@
             <ol>
                             <j:forEach var="hit" items="${hits}"> <!-- NestedViewsSearch.NestedViewsSearchResult -->
                                 <li>
-                                        <a href="${hit.getSearchUrl()}">${hit.getSearchName()}</a>
-                                        <j:forEach var="detail" items="${hit.project.getDetails()}">  <!-- ProjectWrapper.getDetails() -->
+                                         <j:choose>
+                                            <j:when test="${hit.project.getDetails().size() != 0}">
+                                              <b>
+                                                <a href="${hit.getSearchUrl()}">${hit.getSearchName()}</a><st:nbsp/>
+                                              </b>
+                                            </j:when>
+                                            <j:otherwise>
+                                              <a href="${hit.getSearchUrl()}">${hit.getSearchName()}</a><st:nbsp/>
+                                            </j:otherwise>
+                                        </j:choose>
+                                        <small>
+                                        <j:forEach var="detail" items="${hit.project.getDetails()}">  <!-- ProjectWrapper.getDetails() -> LinkableCandidate -->
                                             <j:choose>
-                                                <j:when test="${hit.project.isMultiline()}">
-                                                    ${detail}<br/>
+                                                <j:when test="${detail.isCanLink()}">
+                                                    ${detail.getPrefix()}<a href="${detail.getUrl()}">${detail.getPlainText()}</a>${detail.getSuffix()}
                                                 </j:when>
                                                 <j:otherwise>
-                                                    ${detail};<st:nbsp/>
+                                                    ${detail.getPlainText()}
+                                                </j:otherwise>
+                                            </j:choose>
+                                            <j:choose>
+                                                <j:when test="${hit.project.isMultiline()}">
+                                                    <br/>
+                                                </j:when>
+                                                <j:otherwise>
+                                                    ;<st:nbsp/>
                                                 </j:otherwise>
                                             </j:choose>
                                         </j:forEach>
+                                        </small>
                                 </li>
                             </j:forEach>
             </ol>
