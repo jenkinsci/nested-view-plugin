@@ -36,9 +36,9 @@ public class ProjectWrapper {
     }
 
     //FIXME repalce String b somethign what can harbor link to exact build and maybe collored results
-    public List<String> getDetails() {
+    public List<LinkableCandidate> getDetails() {
         if (project.isPresent()) {
-            List<String> result = new ArrayList<>();
+            List<LinkableCandidate> result = new ArrayList<>();
             if (projectInfo) {
                 //-P
                 String projectInfo = "" +
@@ -46,41 +46,41 @@ public class ProjectWrapper {
                         " is running  : " + project.get().isBuilding() + ", " +
                         " in queue    : " + project.get().isInQueue() + ", " +
                         " disabled    : " + project.get().isDisabled();
-                result.add(projectInfo);
+                result.add(new LinkableCandidate(projectInfo));
             }
             if (last >= 0) {
                 String s = String.valueOf(last);
                 //-L/L0 -all
                 if (s.contains("1")) {//-L1
                     BuildDetails lastBuild = specifiedBuild(" last build           : ", project.get().getLastBuild());
-                    result.add(lastBuild.toString());
+                    result.add(lastBuild.toLinkable(project.get().getName()));
                 }
                 if (s.contains("2")) {//-L2
                     BuildDetails lastStable = specifiedBuild(" last stable build    : ", project.get().getLastStableBuild());
-                    result.add(lastStable.toString());
+                    result.add(lastStable.toLinkable(project.get().getName()));
                 }
                 if (s.contains("3")) {//-L3
                     BuildDetails lastSuc = specifiedBuild(" last success build   : ", project.get().getLastSuccessfulBuild());
-                    result.add(lastSuc.toString());
+                    result.add(lastSuc.toLinkable(project.get().getName()));
                 }
                 if (s.contains("4")) {//-L4
                     BuildDetails lastUnst = specifiedBuild(" last unstable build  : ", project.get().getLastUnstableBuild());
-                    result.add(lastUnst.toString());
+                    result.add(lastUnst.toLinkable(project.get().getName()));
                 }
                 if (s.contains("5")) {//-L5
                     BuildDetails lastFail = specifiedBuild(" last failed build    : ", project.get().getLastFailedBuild());
-                    result.add(lastFail.toString());
+                    result.add(lastFail.toLinkable(project.get().getName()));
                 }
                 if (s.contains("6")) {//-L6
                     BuildDetails lastUnsuc = specifiedBuild(" last unsuccess build : ", project.get().getLastUnsuccessfulBuild());
-                    result.add(lastUnsuc.toString());
+                    result.add(lastUnsuc.toLinkable(project.get().getName()));
                 }
                 if (s.contains("7")) {//-L7
                     BuildDetails lastComp = specifiedBuild(" last completed build : ", project.get().getLastCompletedBuild());
-                    result.add(lastComp.toString());
+                    result.add(lastComp.toLinkable(project.get().getName()));
                 }
             }
-            if (builds>=0 || stats >= 0) {
+            if (builds >= 0 || stats >= 0) {
                 Iterator it = project.get().getBuilds().iterator();
                 //-B , -Bn n builds to past
                 List<BuildDetails> buildsList = new ArrayList<>();
@@ -89,16 +89,16 @@ public class ProjectWrapper {
                 int i1 = builds;
                 int i2 = stats;
                 while (it.hasNext()) {
-                    if (i1 <= 0 && i2 <=0) {
+                    if (i1 <= 0 && i2 <= 0) {
                         break;
                     }
                     Object q = it.next();
                     if (q instanceof AbstractBuild) {
                         AbstractBuild b = (AbstractBuild) q;
-                        if (i1>=0) {
+                        if (i1 > 0) {
                             buildsList.add(buildToString(b));
                         }
-                        if (i2>=0) {
+                        if (i2 > 0) {
                             Integer counter = summ.getOrDefault(b.getResult(), 0);
                             counter = counter + 1;
                             summ.put(b.getResult(), counter);
@@ -108,19 +108,19 @@ public class ProjectWrapper {
                     i2--;
                 }
                 if (stats >= 0) {
-                    result.add(summ.entrySet().stream().map(a -> a.getKey() + ": " + a.getValue() + "x").collect(Collectors.joining(", ")));
+                    result.add(new LinkableCandidate(summ.entrySet().stream().map(a -> a.getKey() + ": " + a.getValue() + "x").collect(Collectors.joining(", "))));
                 }
-                if (builds>=0) {
-                    result.addAll(buildsList.stream().map(a -> a.toString()).collect(Collectors.toList()));
+                if (builds >= 0) {
+                    result.addAll(buildsList.stream().map(a -> a.toLinkable(project.get().getName())).collect(Collectors.toList()));
                 }
             }
             //-m multiline
             if (multiline && result.size() > 0) {
-                result.add(0, "");
+                result.add(0, new LinkableCandidate(""));
             }
             return result;
         } else {
-            return Arrays.asList("N/A");
+            return Arrays.asList(new LinkableCandidate("N/A"));
         }
     }
 
@@ -164,6 +164,25 @@ public class ProjectWrapper {
                         timeStampString + " ago";
             } else {
                 return prefix + "n/a";
+            }
+        }
+
+        public LinkableCandidate toLinkable(String projectName) {
+            if (id != null) {
+                String pre = "";
+                String link;
+                String post = "";
+                if (prefix.isEmpty()) {
+                    link = id + "/" + displayName;
+                } else {
+                    link = prefix;
+                    post = id + "/" + displayName;
+                }
+                post = post + "/" + result + "/" + timeStampString + " ago";
+                ;
+                return new LinkableCandidate(pre, link, post, "../job/" + projectName + "/" + id);
+            } else {
+                return new LinkableCandidate(prefix + "n/a");
             }
         }
     }
