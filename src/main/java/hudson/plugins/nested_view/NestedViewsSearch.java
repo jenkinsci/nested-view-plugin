@@ -39,6 +39,7 @@ public class NestedViewsSearch extends Search {
         private final String withoutArguments;
 
         private boolean multiline;
+        private boolean searchByNvr;
         private boolean projectInfo;
         private int stats = -1;
         private int builds = -1;
@@ -82,25 +83,24 @@ public class NestedViewsSearch extends Search {
                     }
                     NestedViewsSearchFactory.setTmpSkip(n);
                 }
+                if (query.contains("D") && search) {
+                    searchByNvr = true;
+                    bool = "o";
+                    if (builds<=0) { //maybe it was already set
+                        builds = 10;
+                    }
+                }
                 if (query.contains("m") && search) {
                     multiline = true;
-                } else {
-                    multiline = false;
                 }
                 if (query.contains("P") && search) {
                     projectInfo = true;
-                } else {
-                    projectInfo = false;
                 }
                 if (query.contains("S") && search) {
                     stats = getNumber(query, "S", 10);
-                } else {
-                    stats = -1;
                 }
                 if (query.contains("B") && search) {
                     builds = getNumber(query, "B", 10);
-                } else {
-                    builds = -1;
                 }
                 if (query.contains("L") && search) {
                     last = getNumber(query, "L", 0);
@@ -169,6 +169,15 @@ public class NestedViewsSearch extends Search {
             }
         }
 
+        public String getWithoutArguments() {
+            return withoutArguments;
+        }
+
+        public String[] getWithoutArgumentsSplit() {
+            return withoutArguments.split("\\s+");
+        }
+
+
         private int getNumber(String query, String switcher, int n) {
             String l = query.replaceAll(".*" + switcher, "");
             l = l.replaceAll("[^0-9].*", "");
@@ -198,6 +207,18 @@ public class NestedViewsSearch extends Search {
 
         public int getLast() {
             return last;
+        }
+
+        public String getHow() {
+            return how;
+        }
+
+        public boolean isSearchByNvr() {
+            return searchByNvr;
+        }
+
+        public boolean isInvert() {
+            return invert;
         }
 
         public boolean isNonTrivial(boolean suggesting) {
@@ -264,7 +285,7 @@ public class NestedViewsSearch extends Search {
         }
 
         public boolean matches(Query query) {
-            if (query.invert) {
+            if (query.isInvert()) {
                 return !matchesImpl(query);
             } else {
                 return matchesImpl(query);
@@ -293,7 +314,7 @@ public class NestedViewsSearch extends Search {
                 return false;
             }
             if (query.bool.equals("a")) {
-                String[] parts = query.withoutArguments.split("\\s+");
+                String[] parts = query.getWithoutArgumentsSplit();
                 for (String part : parts) {
                     if (!matchSingle(nameOrPath, part, query)) {
                         return false;
@@ -301,7 +322,7 @@ public class NestedViewsSearch extends Search {
                 }
                 return true;
             } else if (query.bool.equals("o")) {
-                String[] parts = query.withoutArguments.split("\\s+");
+                String[] parts = query.getWithoutArgumentsSplit();
                 for (String part : parts) {
                     if (matchSingle(nameOrPath, part, query)) {
                         return true;
@@ -314,17 +335,21 @@ public class NestedViewsSearch extends Search {
         }
 
         private boolean matchSingle(String nameOrPath, String queryOrPart, Query query) {
-            if (query.how.equals("s")) {
+            return matchSingle(nameOrPath, queryOrPart, query.how);
+        }
+
+        public static boolean matchSingle(String nameOrPath, String queryOrPart, String how) {
+            if (how.equals("s")) {
                 return nameOrPath.startsWith(queryOrPart);
-            } else if (query.how.equals("e")) {
+            } else if (how.equals("e")) {
                 return nameOrPath.endsWith(queryOrPart);
-            } else if (query.how.equals("r")) {
+            } else if (how.equals("r")) {
                 return nameOrPath.matches(queryOrPart);
-            } else if (query.how.equals("R")) {
+            } else if (how.equals("R")) {
                 return nameOrPath.matches(".*" + queryOrPart + ".*");
-            } else if (query.how.equals("q")) {
+            } else if (how.equals("q")) {
                 return nameOrPath.equalsIgnoreCase(queryOrPart);
-            } else if (query.how.equals("Q")) {
+            } else if (how.equals("Q")) {
                 return nameOrPath.equals(queryOrPart);
             } else {
                 return nameOrPath.contains(queryOrPart);
@@ -510,11 +535,12 @@ public class NestedViewsSearch extends Search {
         r.add(new HelpItem(" Project/build details in search: ", ""));
         r.add(new HelpItem("m", "multiline instead of singe line"));
         r.add(new HelpItem("P", "will include project details"));
-        r.add(new HelpItem("Ln", "will add information about last builds. Can be followed by mask of numbers 1-last,2-stable,3-green,4-yellow,5-red,6-unsuccess,7-completed"));
+        r.add(new HelpItem("Ln", "will add information about last builds. Plain L c an be followed by mask of numbers 1-last,2-stable,3-green,4-yellow,5-red,6-unsuccess,7-completed"));
         r.add(new HelpItem("Bn", "details about builds. N is limiting am amount of builds. Default is 10!"));
         r.add(new HelpItem("Sn", "statistics (like weather, but in numbers). N is limiting am amount of builds. Default is 10!"));
-        r.add(new HelpItem("S x B x L", "Both thsoe switches are iterating to the past. This may have significant performance impact! L should be fast always"));
-        r.add(new HelpItem("D", "will search also in DisplayName. In addition it sets `-oB` as OR and Build details are required for it to work"));
+        r.add(new HelpItem("S x B x L", "S and B switches are iterating to the past. This may have significant performance impact! L should be fast always"));
+        r.add(new HelpItem("D",
+                "will search also in DisplayName. In addition it sets `-oB` as OR and Build details are required for it to work. The OR is enforcing you to filter jobs first and name as second"));
         return r;
     }
 

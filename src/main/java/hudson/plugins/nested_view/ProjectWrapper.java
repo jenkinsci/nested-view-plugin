@@ -96,7 +96,23 @@ public class ProjectWrapper {
                     if (q instanceof AbstractBuild) {
                         AbstractBuild b = (AbstractBuild) q;
                         if (i1 > 0) {
-                            buildsList.add(buildToString(b));
+                            if (nvrSearch != null && nvrSearch.isSearchByNvr()) {
+                                for (String candidate : nvrSearch.getWithoutArgumentsSplit()) {
+                                    String displayName = b.getDisplayName();
+                                    boolean matches = NestedViewsSearch.NamableWithClass.matchSingle(displayName, candidate, nvrSearch.getHow());
+                                    if (!nvrSearch.isInvert()) {
+                                        if (matches) {
+                                            buildsList.add(buildToString(b));
+                                        }
+                                    } else {
+                                        if (!matches) {
+                                            buildsList.add(buildToString(b));
+                                        }
+                                    }
+                                }
+                            } else {
+                                buildsList.add(buildToString(b));
+                            }
                         }
                         if (i2 > 0) {
                             Integer counter = summ.getOrDefault(b.getResult(), 0);
