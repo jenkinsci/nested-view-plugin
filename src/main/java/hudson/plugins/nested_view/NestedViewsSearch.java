@@ -513,7 +513,7 @@ public class NestedViewsSearch extends Search {
         r.add(new HelpItem("Ln", "will add information about last builds. Can be followed by mask of numbers 1-last,2-stable,3-green,4-yellow,5-red,6-unsuccess,7-completed"));
         r.add(new HelpItem("Bn", "details about builds. N is limiting am amount of builds. Default is 10!"));
         r.add(new HelpItem("Sn", "statistics (like weather, but in numbers). N is limiting am amount of builds. Default is 10!"));
-        r.add(new HelpItem("S x B", "If both S and B are provided, the bigger of those numbers is taken, as in both cases jobs must be iterated"));
+        r.add(new HelpItem("S x B x L", "Both thsoe switches are iterating to the past. This may have significant performance impact! L should be fast always"));
         r.add(new HelpItem("D", "will search also in DisplayName. In addition it sets `-oB` as OR and Build details are required for it to work"));
         return r;
     }
