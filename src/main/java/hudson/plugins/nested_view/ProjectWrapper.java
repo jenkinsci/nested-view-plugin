@@ -180,7 +180,7 @@ public class ProjectWrapper {
 
         private final String id;
         private final String displayName;
-        private final Result result;
+        private final String result;
         private final String timeStampString;
         private final String prefix;
 
@@ -192,7 +192,7 @@ public class ProjectWrapper {
             this.prefix = prefix;
             this.id = id;
             this.displayName = displayName;
-            this.result = result;
+            this.result = result==null?"RUNNING":result.toString();
             this.timeStampString = timeStampString;
         }
 
