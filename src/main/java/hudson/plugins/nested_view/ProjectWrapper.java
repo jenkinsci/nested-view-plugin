@@ -24,6 +24,8 @@ public class ProjectWrapper {
     private final int last;
     private final int builds;
     private final NestedViewsSearch.Query nvrSearch;
+    private final List<LinkableCandidate> details;
+    private int matchedBuildsCount;
 
     public ProjectWrapper(Optional<AbstractProject> project, boolean multiline, boolean projectInfo, int stats, int last, int builds, NestedViewsSearch.Query nvrSearch) {
         this.project = project;
@@ -33,10 +35,14 @@ public class ProjectWrapper {
         this.last = last;
         this.builds = builds;
         this.nvrSearch = nvrSearch;
+        this.details = createDetails();
     }
 
-    //FIXME repalce String b somethign what can harbor link to exact build and maybe collored results
     public List<LinkableCandidate> getDetails() {
+        return createDetails();
+    }
+
+    public List<LinkableCandidate> createDetails() {
         if (project.isPresent()) {
             List<LinkableCandidate> result = new ArrayList<>();
             if (projectInfo) {
@@ -80,6 +86,7 @@ public class ProjectWrapper {
                     result.add(lastComp.toLinkable(project.get().getName()));
                 }
             }
+
             if (builds >= 0 || stats >= 0) {
                 Iterator it = project.get().getBuilds().iterator();
                 //-B , -Bn n builds to past
@@ -129,6 +136,7 @@ public class ProjectWrapper {
                 if (builds >= 0) {
                     result.addAll(buildsList.stream().map(a -> a.toLinkable(project.get().getName())).collect(Collectors.toList()));
                 }
+                matchedBuildsCount = buildsList.size();
             }
             //-m multiline
             if (multiline && result.size() > 0) {
@@ -150,6 +158,22 @@ public class ProjectWrapper {
 
     private BuildDetails buildToString(Run ab) {
         return specifiedBuild("", ab);
+    }
+
+    public boolean isStillValid() {
+        if (project.isPresent()) {
+            if (nvrSearch == null) {
+                return true;
+            } else {
+                if (nvrSearch.isFinalFilter() && matchedBuildsCount <= 0) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        } else {
+            return true;
+        }
     }
 
     private static class BuildDetails {
