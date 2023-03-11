@@ -1,4 +1,4 @@
-package hudson.plugins.nested_view;
+package hudson.plugins.nested_view.search;
 
 public class LinkableCandidate {
     private final String plainText;
