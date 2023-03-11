@@ -2,6 +2,7 @@ package hudson.plugins.nested_view.search;
 
 import hudson.model.Result;
 import hudson.model.Run;
+import jenkins.model.Jenkins;
 
 public class BuildDetails {
 
@@ -47,7 +48,7 @@ public class BuildDetails {
             }
             post = post + "/" + result + "/" + timeStampString + " ago";
             ;
-            return new LinkableCandidate(pre, link, post, "../job/" + projectName + "/" + id);
+            return new LinkableCandidate(pre, link, post, Jenkins.get().getRootUrl().replaceAll("[\\/]+$", "") + "/job/" + projectName + "/" + id);
         } else {
             return new LinkableCandidate(prefix + "n/a");
         }
