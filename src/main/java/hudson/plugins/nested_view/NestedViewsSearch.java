@@ -40,6 +40,7 @@ public class NestedViewsSearch extends Search {
 
         private boolean multiline;
         private boolean searchByNvr;
+        private boolean finalFilter;
         private boolean projectInfo;
         private int stats = -1;
         private int builds = -1;
@@ -83,10 +84,13 @@ public class NestedViewsSearch extends Search {
                     }
                     NestedViewsSearchFactory.setTmpSkip(n);
                 }
-                if (query.contains("D") && search) {
+                if ((query.contains("D") || query.contains("d")) && search) {
+                    if (query.contains("D")) {
+                        finalFilter = true;
+                    }
                     searchByNvr = true;
                     bool = "o";
-                    if (builds<=0) { //maybe it was already set
+                    if (builds <= 0) { //maybe it was already set
                         builds = 10;
                     }
                 }
@@ -215,6 +219,10 @@ public class NestedViewsSearch extends Search {
 
         public boolean isSearchByNvr() {
             return searchByNvr;
+        }
+
+        public boolean isFinalFilter() {
+            return finalFilter;
         }
 
         public boolean isInvert() {
@@ -408,6 +416,13 @@ public class NestedViewsSearch extends Search {
         private final String searchUrl;
         private final ProjectWrapper project;
 
+        public boolean isStillValid() {
+            if (project != null) {
+                return project.isStillValid();
+            }
+            return true;
+        }
+
         @Override
         public String getSearchName() {
             return searchName;
@@ -467,7 +482,10 @@ public class NestedViewsSearch extends Search {
             if (this.query.isNonTrivial(false)) {
                 for (NamableWithClass item : allCache) {
                     if (item.matches(this.query)) {
-                        hits.add(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl(), item.getProject(), this.query));
+                        NestedViewsSearchResult n = new NestedViewsSearchResult(item.getUsefulName(), item.getUrl(), item.getProject(), this.query);
+                        if (n.isStillValid()) {
+                            hits.add(n);
+                        }
                     }
                 }
             }
@@ -539,8 +557,10 @@ public class NestedViewsSearch extends Search {
         r.add(new HelpItem("Bn", "details about builds. N is limiting am amount of builds. Default is 10!"));
         r.add(new HelpItem("Sn", "statistics (like weather, but in numbers). N is limiting am amount of builds. Default is 10!"));
         r.add(new HelpItem("S x B x L", "S and B switches are iterating to the past. This may have significant performance impact! L should be fast always"));
-        r.add(new HelpItem("D",
+        r.add(new HelpItem("d",
                 "will search also in DisplayName. In addition it sets `-oB` as OR and Build details are required for it to work. The OR is enforcing you to filter jobs first and name as second"));
+        r.add(new HelpItem("D",
+                "Same -d, but only projects with at least one matching build will be shown"));
         return r;
     }
 
