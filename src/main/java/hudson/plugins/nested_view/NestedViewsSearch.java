@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.AbstractProject;
 import hudson.model.TopLevelItem;
 import hudson.model.View;
+import hudson.plugins.nested_view.search.ExtendedSearch;
 import hudson.search.Search;
 import hudson.search.SearchIndex;
 import hudson.search.SearchItem;

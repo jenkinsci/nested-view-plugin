@@ -1,9 +1,9 @@
-package hudson.plugins.nested_view;
+package hudson.plugins.nested_view.search;
 
 import hudson.model.Result;
 import hudson.model.Run;
 
-class BuildDetails {
+public class BuildDetails {
 
     private final String id;
     private final String displayName;
@@ -11,11 +11,11 @@ class BuildDetails {
     private final String timeStampString;
     private final String prefix;
 
-    BuildDetails(String prefix, Run run) {
+    public BuildDetails(String prefix, Run run) {
         this(prefix, run.getId(), run.getDisplayName(), run.getResult(), run.getTimestampString());
     }
 
-    BuildDetails(String prefix, String id, String displayName, Result result, String timeStampString) {
+    public BuildDetails(String prefix, String id, String displayName, Result result, String timeStampString) {
         this.prefix = prefix;
         this.id = id;
         this.displayName = displayName;

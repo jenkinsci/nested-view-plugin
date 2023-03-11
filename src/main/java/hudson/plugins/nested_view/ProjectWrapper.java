@@ -14,6 +14,8 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.plugins.nested_view.search.BuildDetails;
+import hudson.plugins.nested_view.search.LinkableCandidate;
 
 public class ProjectWrapper {
 
