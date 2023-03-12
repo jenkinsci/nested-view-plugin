@@ -25,16 +25,21 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class NestedViewsSearch extends Search {
 
+    private static final long refreshTimeout = 10l * 60l * 1000l;
+    private static final int refreshAmount = 20;
+    private final static Logger LOGGER = Logger.getLogger(Search.class.getName());
     private static transient volatile List<NamableWithClass> allCache = new ArrayList(0);
     private static transient volatile int allTTL = 0;
     private static transient volatile Date lastRefresh = new Date(0);
-    private static final long refreshTimeout = 10l * 60l * 1000l;
-    private static final int refreshAmount = 20;
+    private List<NestedViewsSearchResult> hits;
+    private Query query;
 
     @SuppressFBWarnings(value = {"ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"}, justification = "allTTL and allCache are used to cache base foundation of search. Cache is shared between insntances")
     public NestedViewsSearch() {
@@ -68,23 +73,26 @@ public class NestedViewsSearch extends Search {
         }
     }
 
-    private final static Logger LOGGER = Logger.getLogger(Search.class.getName());
-    private List<NestedViewsSearchResult> hits = new ArrayList<>();
-    private Query query;
-
-
     @Override
     public void doIndex(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
         String query = req.getParameter("q");
+        hits = new ArrayList<>();
         if (query != null) {
             this.query = new Query(true, query);
             if (this.query.isNonTrivial(false)) {
+                List<NestedViewsSearchResult> initialHits = new ArrayList<>();
+                final Set<String> matched = new HashSet<>();
                 for (NamableWithClass item : allCache) {
-                    if (item.matches(this.query)) {
-                        NestedViewsSearchResult n = new NestedViewsSearchResult(item.getUsefulName(), item.getUrl(), item.getProject(), this.query);
-                        if (n.isStillValid()) {
-                            hits.add(n);
-                        }
+                    if (item.matches(this.query, matched)) {
+                        NestedViewsSearchResult n = new NestedViewsSearchResult(item.getUsefulName(), item.getUrl(), item.getProject(), this.query, matched);
+                        initialHits.add(n);
+                    }
+                }
+                //this have to be done after all names were tried agaisnt all tokens
+                for (NestedViewsSearchResult hit : initialHits) {
+                    hit.createDetails();
+                    if (hit.isStillValid()) {
+                        hits.add(hit);
                     }
                 }
             }
@@ -99,10 +107,11 @@ public class NestedViewsSearch extends Search {
     public SearchResult getSuggestions(final StaplerRequest req, @QueryParameter final String query) {
         SearchResult suggestedItems = super.getSuggestions(req, query);
         this.query = new Query(false, query);
+        final Set<String> matched = new HashSet<>(); //unusuded for suggestions
         if (this.query.isNonTrivial(true)) {
             for (NamableWithClass item : allCache) {
-                if (item.matches(this.query)) {
-                    suggestedItems.add(new SuggestedItem(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl(), item.getProject(), null)));
+                if (item.matches(this.query, matched)) {
+                    suggestedItems.add(new SuggestedItem(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl(), item.getProject(), null, null)));
                 }
             }
         }
@@ -141,9 +150,9 @@ public class NestedViewsSearch extends Search {
         r.add(new HelpItem("d",
                 "will search also in DisplayName. In addition it sets `-oB` as OR and Build details are required for it to work. The OR is enforcing you to filter jobs first and name as second"));
         r.add(new HelpItem("D",
-                "Same as -d, but only projects with at least one matching build will be shown. -d/-D canbe acompanied by number - algorithm: "));
-        r.add(new HelpItem("1: ", "default, what mathced project name, is not used in displayName search"));
-        r.add(new HelpItem("2: ", "all yor expressions are used in used in displayName search"));
+                "Same as -d, but only projects with at least one matching build will be shown. -d/-D  do not affect suggestions and can be acompanied by number - algorithm: "));
+        r.add(new HelpItem("1: ", "default, what mathced project name, is not used in displayName search. -! is weird here, not sure what to do better"));
+        r.add(new HelpItem("2: ", "all yor expressions are used used in displayName search"));
         return r;
     }
 

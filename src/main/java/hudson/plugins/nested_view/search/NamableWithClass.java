@@ -3,10 +3,11 @@ package hudson.plugins.nested_view.search;
 import hudson.model.AbstractProject;
 import hudson.model.View;
 import hudson.plugins.nested_view.NestedView;
-import hudson.plugins.nested_view.search.Query;
 import jenkins.model.Jenkins;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 public class NamableWithClass {
     private final String name;
@@ -51,15 +52,15 @@ public class NamableWithClass {
         }
     }
 
-    public boolean matches(Query query) {
+    public boolean matches(Query query, final Set<String> matched) {
         if (query.isInvert()) {
-            return !matchesImpl(query);
+            return !matchesImpl(query, matched);
         } else {
-            return matchesImpl(query);
+            return matchesImpl(query, matched);
         }
     }
 
-    private boolean matchesImpl(Query query) {
+    private boolean matchesImpl(Query query, final Set<String> matched) {
         String nameOrPath = getFullPath();
         if (query.getPart().equals("p")) {
             nameOrPath = getName();
@@ -82,22 +83,32 @@ public class NamableWithClass {
         }
         if (query.getBool().equals("a")) {
             String[] parts = query.getWithoutArgumentsSplit();
+            boolean r = true;
             for (String part : parts) {
                 if (!matchSingle(nameOrPath, part, query)) {
-                    return false;
+                    r = false;
+                } else {
+                    matched.add(part);
                 }
             }
-            return true;
+            return r;
         } else if (query.getBool().equals("o")) {
             String[] parts = query.getWithoutArgumentsSplit();
+            boolean r = false;
             for (String part : parts) {
                 if (matchSingle(nameOrPath, part, query)) {
-                    return true;
+                    r = true;
+                    matched.add(part);
                 }
             }
-            return false;
+            return r;
         } else {
-            return matchSingle(nameOrPath, query.getWithoutArguments(), query);
+            if (matchSingle(nameOrPath, query.getWithoutArguments(), query)) {
+                matched.add(query.getWithoutArguments());
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 

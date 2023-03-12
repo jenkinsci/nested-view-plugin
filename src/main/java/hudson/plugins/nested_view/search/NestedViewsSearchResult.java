@@ -6,6 +6,7 @@ import hudson.plugins.nested_view.ProjectWrapper;
 import hudson.search.SearchIndex;
 import hudson.search.SearchItem;
 
+import java.util.Collection;
 import java.util.Optional;
 
 public class NestedViewsSearchResult implements SearchItem, Comparable, ExtendedSearch {
@@ -35,13 +36,13 @@ public class NestedViewsSearchResult implements SearchItem, Comparable, Extended
         return null;
     }
 
-    public NestedViewsSearchResult(String searchName, String searchUrl, Optional<AbstractProject> project, Query query) {
+    public NestedViewsSearchResult(String searchName, String searchUrl, Optional<AbstractProject> project, Query query, Collection<String> matched) {
         this.searchName = searchName;
         this.searchUrl = searchUrl;
         if (query != null) {
-            this.project = new ProjectWrapper(project, query.isMultiline(), query.isProjectInfo(), query.getStats(), query.getLast(), query.getBuilds(), query);
+            this.project = new ProjectWrapper(project, query.isMultiline(), query.isProjectInfo(), query.getStats(), query.getLast(), query.getBuilds(), query, matched);
         } else {
-            this.project = new ProjectWrapper(Optional.empty(), false, false, -1, -1, -1, null);
+            this.project = new ProjectWrapper(Optional.empty(), false, false, -1, -1, -1, null, null);
         }
     }
 
@@ -63,5 +64,9 @@ public class NestedViewsSearchResult implements SearchItem, Comparable, Extended
     @Override
     public ProjectWrapper getProject() {
         return project;
+    }
+
+    public void createDetails() {
+        project.createDetails();
     }
 }

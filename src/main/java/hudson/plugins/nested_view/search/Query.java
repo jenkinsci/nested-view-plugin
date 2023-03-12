@@ -13,7 +13,7 @@ public class Query {
     private final String withoutArguments;
 
     private boolean multiline;
-    private boolean searchByNvr;
+    private int searchByNvr = -1;
     private boolean finalFilter;
     private boolean projectInfo;
     private int stats = -1;
@@ -74,16 +74,23 @@ public class Query {
                 }
                 NestedViewsSearchFactory.setTmpSkip(n);
             }
-            if ((query.contains("D") || query.contains("d")) && search) {
-                if (query.contains("D")) {
-                    finalFilter = true;
+            if ((query.contains("D") || query.contains("d"))) {
+                if(search) {
+                    if (query.contains("D")) {
+                        finalFilter = true;
+                        searchByNvr = getNumber(query, "D", 1);
+                        ;
+                    } else {
+                        searchByNvr = getNumber(query, "d", 1);
+                        ;
+                    }
                 }
-                searchByNvr = true;
                 bool = "o";
                 if (builds <= 0) { //maybe it was already set
                     builds = 10;
                 }
             }
+
             if (query.contains("m") && search) {
                 multiline = true;
             }
@@ -207,7 +214,7 @@ public class Query {
         return how;
     }
 
-    public boolean isSearchByNvr() {
+    public int isSearchByNvr() {
         return searchByNvr;
     }
 
