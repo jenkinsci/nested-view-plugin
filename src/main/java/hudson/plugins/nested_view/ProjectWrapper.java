@@ -133,7 +133,9 @@ public class ProjectWrapper {
                     i2--;
                 }
                 if (stats >= 0) {
-                    result.add(new LinkableCandidate(summ.entrySet().stream().map(a -> a.getKey() + ": " + a.getValue() + "x").collect(Collectors.joining(", "))));
+                    result.add(new LinkableCandidate(summ.entrySet().stream().map(a ->
+                            a.getKey() == null ? "RUNNING" : a.getKey() + ": " + a.getValue() + "x")
+                            .collect(Collectors.joining(", "))));
                 }
                 if (builds >= 0) {
                     result.addAll(buildsList.stream().map(a -> a.toLinkable(project.get().getName())).collect(Collectors.toList()));
