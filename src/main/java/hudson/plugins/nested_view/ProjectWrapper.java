@@ -2,6 +2,7 @@ package hudson.plugins.nested_view;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -28,10 +29,11 @@ public class ProjectWrapper {
     private final int last;
     private final int builds;
     private final Query nvrSearch;
-    private final List<LinkableCandidate> details;
+    private List<LinkableCandidate> details;
+    private final Collection<String> matched;
     private int matchedBuildsCount;
 
-    public ProjectWrapper(Optional<AbstractProject> project, boolean multiline, boolean projectInfo, int stats, int last, int builds, Query nvrSearch) {
+    public ProjectWrapper(Optional<AbstractProject> project, boolean multiline, boolean projectInfo, int stats, int last, int builds, Query nvrSearch, Collection<String> matched) {
         this.project = project;
         this.multiline = multiline;
         this.projectInfo = projectInfo;
@@ -39,14 +41,18 @@ public class ProjectWrapper {
         this.last = last;
         this.builds = builds;
         this.nvrSearch = nvrSearch;
-        this.details = createDetails();
+        this.matched = matched;
     }
 
     public List<LinkableCandidate> getDetails() {
-        return createDetails();
+        return details;
     }
 
-    public List<LinkableCandidate> createDetails() {
+    public void createDetails() {
+        details = createDetailsImpl();
+    }
+
+    public List<LinkableCandidate> createDetailsImpl() {
         if (project.isPresent()) {
             List<LinkableCandidate> result = new ArrayList<>();
             if (projectInfo) {
@@ -107,8 +113,11 @@ public class ProjectWrapper {
                     if (q instanceof AbstractBuild) {
                         AbstractBuild b = (AbstractBuild) q;
                         if (i1 > 0) {
-                            if (nvrSearch != null && nvrSearch.isSearchByNvr()) {
+                            if (nvrSearch != null && nvrSearch.isSearchByNvr() >= 0) {
                                 for (String candidate : nvrSearch.getWithoutArgumentsSplit()) {
+                                    if (nvrSearch.isSearchByNvr() == 1 && matched != null && matched.contains(candidate)) {
+                                        continue;
+                                    }
                                     String displayName = b.getDisplayName();
                                     boolean matches = NamableWithClass.matchSingle(displayName, candidate, nvrSearch.getHow());
                                     if (!nvrSearch.isInvert()) {
