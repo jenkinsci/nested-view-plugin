@@ -16,6 +16,8 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.plugins.nested_view.search.BuildDetails;
 import hudson.plugins.nested_view.search.LinkableCandidate;
+import hudson.plugins.nested_view.search.NamableWithClass;
+import hudson.plugins.nested_view.search.Query;
 
 public class ProjectWrapper {
 
@@ -25,11 +27,11 @@ public class ProjectWrapper {
     private final int stats;
     private final int last;
     private final int builds;
-    private final NestedViewsSearch.Query nvrSearch;
+    private final Query nvrSearch;
     private final List<LinkableCandidate> details;
     private int matchedBuildsCount;
 
-    public ProjectWrapper(Optional<AbstractProject> project, boolean multiline, boolean projectInfo, int stats, int last, int builds, NestedViewsSearch.Query nvrSearch) {
+    public ProjectWrapper(Optional<AbstractProject> project, boolean multiline, boolean projectInfo, int stats, int last, int builds, Query nvrSearch) {
         this.project = project;
         this.multiline = multiline;
         this.projectInfo = projectInfo;
@@ -108,7 +110,7 @@ public class ProjectWrapper {
                             if (nvrSearch != null && nvrSearch.isSearchByNvr()) {
                                 for (String candidate : nvrSearch.getWithoutArgumentsSplit()) {
                                     String displayName = b.getDisplayName();
-                                    boolean matches = NestedViewsSearch.NamableWithClass.matchSingle(displayName, candidate, nvrSearch.getHow());
+                                    boolean matches = NamableWithClass.matchSingle(displayName, candidate, nvrSearch.getHow());
                                     if (!nvrSearch.isInvert()) {
                                         if (matches) {
                                             buildsList.add(buildToString(b));
@@ -134,7 +136,8 @@ public class ProjectWrapper {
                 }
                 if (stats >= 0) {
                     result.add(new LinkableCandidate(summ.entrySet().stream().map(a ->
-                            a.getKey() == null ? "RUNNING" : a.getKey() + ": " + a.getValue() + "x")
+                            a.getKey() == null ? "RUNNING: " + a.getValue() + "x"
+                                    : a.getKey() + ": " + a.getValue() + "x")
                             .collect(Collectors.joining(", "))));
                 }
                 if (builds >= 0) {
