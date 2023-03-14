@@ -5,6 +5,7 @@ import hudson.model.AbstractProject;
 import hudson.model.TopLevelItem;
 import hudson.model.View;
 import hudson.plugins.nested_view.search.HelpItem;
+import hudson.plugins.nested_view.search.HistoryItem;
 import hudson.plugins.nested_view.search.NamableWithClass;
 import hudson.plugins.nested_view.search.NestedViewsSearchResult;
 import hudson.plugins.nested_view.search.Query;
@@ -34,7 +35,7 @@ public class NestedViewsSearch extends Search {
 
     private static final long refreshTimeout = 10l * 60l * 1000l;
     private static final int refreshAmount = 20;
-    private final static Logger LOGGER = Logger.getLogger(Search.class.getName());
+    public final static Logger LOGGER = Logger.getLogger(Search.class.getName());
     private static transient volatile List<NamableWithClass> allCache = new ArrayList(0);
     private static transient volatile int allTTL = 0;
     private static transient volatile Date lastRefresh = new Date(0);
@@ -96,11 +97,23 @@ public class NestedViewsSearch extends Search {
                     }
                 }
             }
+            putToHistory(query, hits.size(), new Date());
         }
         Collections.sort(hits);
         //todo, add paging &start=&count= .. defaulting to 0 and somwhere on 1000. Probably add next/prev links to jelly. Include `showing x/form` in jelly
         RequestDispatcher v = req.getView(this, "search-results.jelly");
         v.forward(req, rsp);
+    }
+
+    @SuppressFBWarnings(value = {"ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"}, justification = "history is shared")
+    private void putToHistory(String query, int size, Date date) {
+        HistoryItem his = new HistoryItem(query.trim().replaceAll("\\s+", " "), size, date);
+        HistoryItem.add(his);
+    }
+
+    @SuppressFBWarnings(value = {"ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"}, justification = "history is shared")
+    public List getHistory() {
+        return HistoryItem.get();
     }
 
     @Override

@@ -48,9 +48,13 @@ public class BuildDetails {
             }
             post = post + "/" + result + "/" + timeStampString + " ago";
             ;
-            return new LinkableCandidate(pre, link, post, Jenkins.get().getRootUrl().replaceAll("[\\/]+$", "") + "/job/" + projectName + "/" + id);
+            return new LinkableCandidate(pre, link, post, getJenkinsUrl() + "/job/" + projectName + "/" + id);
         } else {
             return new LinkableCandidate(prefix + "n/a");
         }
+    }
+
+    public static String getJenkinsUrl() {
+        return Jenkins.get().getRootUrl().replaceAll("[\\/]+$", "");
     }
 }

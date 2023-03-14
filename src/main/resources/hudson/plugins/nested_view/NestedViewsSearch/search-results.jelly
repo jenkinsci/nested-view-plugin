@@ -6,6 +6,19 @@
     <l:layout title="${%Search for} '${q}'">
         <l:side-panel>
             <h2><l:icon class="icon-help icon-sm" /> Search help</h2>
+            <a onclick="document.getElementById('button_expand_2_1').style.display = 'none'; document.getElementById('button_collapse_2_1').style.display = 'inline'; document.getElementById('details_2_1').style.display = 'block'; return false;"
+               style="font-size: smaller; display: inline" href="#" id="button_expand_2_1">Search History (expand)</a>
+            <a onclick="document.getElementById('button_collapse_2_1').style.display = 'none';document.getElementById('details_2_1').style.display = 'none';document.getElementById('button_expand_2_1').style.display = 'inline';                                                 return false;"
+               style="font-size: smaller; display: none" href="#" id="button_collapse_2_1">Search History (collapse)</a>
+            <div style="display: none" id="details_2_1">
+                <ol>
+                <j:forEach var="hist" items="${it.getHistory()}">
+                    <li>
+                        <a href="${hist.getUrl()}" >${hist.getQuery()}</a><st:nbsp/><small>found ${hist.getSize()} at ${hist.getDate()}</small>
+                    </li>
+                </j:forEach>
+                </ol>
+            </div>
             <h3>${%Supported keywords with an example}</h3>
             <ol>
                  <j:forEach var="help" items="${it.getSearchHelp()}">

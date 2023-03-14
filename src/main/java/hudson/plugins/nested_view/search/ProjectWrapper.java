@@ -1,4 +1,4 @@
-package hudson.plugins.nested_view;
+package hudson.plugins.nested_view.search;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,10 +15,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Result;
 import hudson.model.Run;
-import hudson.plugins.nested_view.search.BuildDetails;
-import hudson.plugins.nested_view.search.LinkableCandidate;
-import hudson.plugins.nested_view.search.NamableWithClass;
-import hudson.plugins.nested_view.search.Query;
 
 public class ProjectWrapper {
 

@@ -2,7 +2,6 @@ package hudson.plugins.nested_view.search;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.AbstractProject;
-import hudson.plugins.nested_view.ProjectWrapper;
 import hudson.search.SearchIndex;
 import hudson.search.SearchItem;
 
