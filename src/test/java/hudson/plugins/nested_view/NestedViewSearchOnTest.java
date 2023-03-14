@@ -25,11 +25,15 @@ package hudson.plugins.nested_view;
 
 import static org.junit.Assert.assertNotNull;
 
+import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
+
+import java.util.List;
 
 public class NestedViewSearchOnTest {
 
@@ -47,5 +51,11 @@ public class NestedViewSearchOnTest {
         assertNotNull(NestedViewTest.searchAndCheck2(wc, rule));
         assertNotNull(NestedViewTest.searchAndCheck3(wc, rule));
         assertNotNull(NestedViewTest.searchAndCheck4(wc, rule));
+        HtmlPage page = wc.search("-mPLBSD2: .*.*");
+        System.out.println(page.toString());
+        List<HtmlAnchor> anchors = page.getAnchors();
+        for(HtmlAnchor anchor: anchors) {
+            System.out.println(anchor.toString());
+        }
     }
 }
