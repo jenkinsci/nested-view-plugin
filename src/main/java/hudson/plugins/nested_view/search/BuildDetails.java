@@ -4,6 +4,8 @@ import hudson.model.Result;
 import hudson.model.Run;
 import jenkins.model.Jenkins;
 
+import java.util.Date;
+
 public class BuildDetails {
 
     private final String id;
@@ -11,17 +13,19 @@ public class BuildDetails {
     private final String result;
     private final String timeStampString;
     private final String prefix;
+    private final Date dateTime;
 
     public BuildDetails(String prefix, Run run) {
-        this(prefix, run.getId(), run.getDisplayName(), run.getResult(), run.getTimestampString());
+        this(prefix, run.getId(), run.getDisplayName(), run.getResult(), run.getTimestampString(), run.getTime());
     }
 
-    public BuildDetails(String prefix, String id, String displayName, Result result, String timeStampString) {
+    public BuildDetails(String prefix, String id, String displayName, Result result, String timeStampString, Date dateTime) {
         this.prefix = prefix;
         this.id = id;
         this.displayName = displayName;
         this.result = result == null ? "RUNNING" : result.toString();
         this.timeStampString = timeStampString;
+        this.dateTime = dateTime;
     }
 
     public String toString() {
@@ -56,5 +60,9 @@ public class BuildDetails {
 
     public static String getJenkinsUrl() {
         return Jenkins.get().getRootUrl().replaceAll("[\\/]+$", "");
+    }
+
+    public Date getDateTime() {
+        return dateTime;
     }
 }

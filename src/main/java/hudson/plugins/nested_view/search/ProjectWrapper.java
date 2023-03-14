@@ -3,6 +3,7 @@ package hudson.plugins.nested_view.search;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -28,6 +29,7 @@ public class ProjectWrapper {
     private List<LinkableCandidate> details;
     private final Collection<String> matched;
     private int matchedBuildsCount;
+    private Date dateTime = new Date(Integer.MIN_VALUE);
 
     public ProjectWrapper(Optional<AbstractProject> project, boolean multiline, boolean projectInfo, int stats, int last, int builds, Query nvrSearch, Collection<String> matched) {
         this.project = project;
@@ -66,14 +68,17 @@ public class ProjectWrapper {
                 //-L/L0 -all
                 if (s.contains("1")) {//-L1
                     BuildDetails lastBuild = specifiedBuild(" last build           : ", project.get().getLastBuild());
+                    setDateTime(lastBuild);
                     result.add(lastBuild.toLinkable(project.get().getName()));
                 }
                 if (s.contains("2")) {//-L2
                     BuildDetails lastStable = specifiedBuild(" last stable build    : ", project.get().getLastStableBuild());
+                    setDateTime(lastStable);
                     result.add(lastStable.toLinkable(project.get().getName()));
                 }
                 if (s.contains("3")) {//-L3
                     BuildDetails lastSuc = specifiedBuild(" last success build   : ", project.get().getLastSuccessfulBuild());
+                    setDateTime(lastSuc);
                     result.add(lastSuc.toLinkable(project.get().getName()));
                 }
                 if (s.contains("4")) {//-L4
@@ -82,14 +87,17 @@ public class ProjectWrapper {
                 }
                 if (s.contains("5")) {//-L5
                     BuildDetails lastFail = specifiedBuild(" last failed build    : ", project.get().getLastFailedBuild());
+                    setDateTime(lastFail);
                     result.add(lastFail.toLinkable(project.get().getName()));
                 }
                 if (s.contains("6")) {//-L6
                     BuildDetails lastUnsuc = specifiedBuild(" last unsuccess build : ", project.get().getLastUnsuccessfulBuild());
+                    setDateTime(lastUnsuc);
                     result.add(lastUnsuc.toLinkable(project.get().getName()));
                 }
                 if (s.contains("7")) {//-L7
                     BuildDetails lastComp = specifiedBuild(" last completed build : ", project.get().getLastCompletedBuild());
+                    setDateTime(lastComp);
                     result.add(lastComp.toLinkable(project.get().getName()));
                 }
             }
@@ -119,16 +127,22 @@ public class ProjectWrapper {
                                     boolean matches = NamableWithClass.matchSingle(displayName, candidate, nvrSearch.getHow());
                                     if (!nvrSearch.isInvert()) {
                                         if (matches) {
-                                            buildsList.add(buildToString(b));
+                                            BuildDetails bb = buildToString(b);
+                                            setDateTime(bb);
+                                            buildsList.add(bb);
                                         }
                                     } else {
                                         if (!matches) {
-                                            buildsList.add(buildToString(b));
+                                            BuildDetails bb = buildToString(b);
+                                            setDateTime(bb);
+                                            buildsList.add(bb);
                                         }
                                     }
                                 }
                             } else {
-                                buildsList.add(buildToString(b));
+                                BuildDetails bb = buildToString(b);
+                                setDateTime(bb);
+                                buildsList.add(bb);
                             }
                         }
                         if (i2 > 0) {
@@ -161,12 +175,20 @@ public class ProjectWrapper {
         }
     }
 
+    private void setDateTime(BuildDetails build) {
+        dateTime = new Date(Math.max(dateTime.getTime(), build.getDateTime().getTime()));
+    }
+
+    public Date getDateTime() {
+        return dateTime;
+    }
+
     public boolean isMultiline() {
         return multiline;
     }
 
     private BuildDetails specifiedBuild(String s, Run lastBuild) {
-        return lastBuild != null ? new BuildDetails(s, lastBuild) : new BuildDetails(s, null, null, null, null);
+        return lastBuild != null ? new BuildDetails(s, lastBuild) : new BuildDetails(s, null, null, null, null, new Date(0));
     }
 
     private BuildDetails buildToString(Run ab) {
