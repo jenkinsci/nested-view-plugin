@@ -57,8 +57,9 @@ public class ProjectWrapper {
             List<LinkableCandidate> result = new ArrayList<>();
             if (projectInfo) {
                 //-P
+                int bc = project.get().getNextBuildNumber() - 1;
                 String projectInfo = "" +
-                        " builds count: " + project.get().getBuilds().size() + ", " +
+                        " builds count: " + bc + ", " +
                         " is running  : " + project.get().isBuilding() + ", " +
                         " in queue    : " + project.get().isInQueue() + ", " +
                         " disabled    : " + project.get().isDisabled();
