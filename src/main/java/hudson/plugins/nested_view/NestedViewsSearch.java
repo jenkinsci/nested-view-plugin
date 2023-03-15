@@ -98,8 +98,14 @@ public class NestedViewsSearch extends Search {
                 }
             }
             putToHistory(query, hits.size(), new Date());
+            switch (this.query.getSort()){
+                case 2: Collections.sort(hits, new NestedViewsSearchResult.DateComparator()); break;
+                case 3: Collections.sort(hits, new NestedViewsSearchResult.NameComparator()); break;
+                default: Collections.sort(hits, new NestedViewsSearchResult.LenghtComparator()); break;
+            }
+        } else {
+            Collections.sort(hits, new NestedViewsSearchResult.LenghtComparator());
         }
-        Collections.sort(hits);
         //todo, add paging &start=&count= .. defaulting to 0 and somwhere on 1000. Probably add next/prev links to jelly. Include `showing x/form` in jelly
         RequestDispatcher v = req.getView(this, "search-results.jelly");
         v.forward(req, rsp);
@@ -151,6 +157,10 @@ public class NestedViewsSearch extends Search {
         r.add(new HelpItem("n", "search only in nested views (default is in all -jw (-jvn))"));
         r.add(new HelpItem("w", "search only in views and nested views (default is in all -jw (-jvn))"));
         r.add(new HelpItem("!", "invert result"));
+        r.add(new HelpItem("t", "sort results; have digital parameter:"));
+        r.add(new HelpItem("1", "default - by lenght of items"));
+        r.add(new HelpItem("2", "by date - requires B and/or L"));
+        r.add(new HelpItem("3", "alphabetically"));
         r.add(new HelpItem("Xn", "for NEXTn searches Nested View search will be turned off. n is optional number 1-9"));
         r.add(new HelpItem("eg \"-Rjo: dacapo sp[ei]c\"", "will find all Jobs which Matches .*dacapo.* or .*sp[ei]c.* "));
         r.add(new HelpItem(" Project/build details in search: ", ""));

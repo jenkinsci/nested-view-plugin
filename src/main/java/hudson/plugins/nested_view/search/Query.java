@@ -19,6 +19,7 @@ public class Query {
     private int stats = -1;
     private int builds = -1;
     private int last = -1;
+    private int sort = 1;
 
     public String getOriginal() {
         return original;
@@ -34,6 +35,10 @@ public class Query {
 
     public String getPart() {
         return part;
+    }
+
+    public int getSort() {
+        return sort;
     }
 
     private String where = "vnj"; //v,n,j
@@ -110,6 +115,9 @@ public class Query {
                 }
             } else {
                 last = -1;
+            }
+            if (query.contains("t")) {
+                sort = getNumber(query, "t", 1);
             }
             if (query.contains("j") || query.contains("v") || query.contains("n") || query.contains("w")) {
                 where = "";

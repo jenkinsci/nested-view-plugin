@@ -1,5 +1,6 @@
 package hudson.plugins.nested_view.search;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Result;
 import hudson.model.Run;
 import jenkins.model.Jenkins;
@@ -19,6 +20,7 @@ public class BuildDetails {
         this(prefix, run.getId(), run.getDisplayName(), run.getResult(), run.getTimestampString(), run.getTime());
     }
 
+    @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "date is not cared")
     public BuildDetails(String prefix, String id, String displayName, Result result, String timeStampString, Date dateTime) {
         this.prefix = prefix;
         this.id = id;
@@ -62,7 +64,7 @@ public class BuildDetails {
         return Jenkins.get().getRootUrl().replaceAll("[\\/]+$", "");
     }
 
-    public Date getDateTime() {
-        return dateTime;
+    public long getDateTime() {
+        return dateTime.getTime();
     }
 }
