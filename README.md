@@ -7,3 +7,13 @@ Deatails about search impl can be found: https://jvanek.fedorapeople.org/jenkins
 
 If the search will become obstacle, then the plugin probably can be split to two. On huge instances (10k+) do not torture the search engine with .* or ! negation. The paging and some minimal query are on todo list (see code comments)
 
+## Testing build
+
+    mvn hpi:run
+## Performing release
+
+Always test connection before release.
+
+Testing connection: `ssh -T git@github.com`
+
+Release: `mvn release:prepare release:perform`
