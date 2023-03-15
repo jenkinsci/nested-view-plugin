@@ -176,11 +176,11 @@ public class ProjectWrapper {
     }
 
     private void setDateTime(BuildDetails build) {
-        dateTime = new Date(Math.max(dateTime.getTime(), build.getDateTime().getTime()));
+        dateTime = new Date(Math.max(dateTime.getTime(), build.getDateTime()));
     }
 
-    public Date getDateTime() {
-        return dateTime;
+    public long getDateTime() {
+        return dateTime.getTime();
     }
 
     public boolean isMultiline() {
