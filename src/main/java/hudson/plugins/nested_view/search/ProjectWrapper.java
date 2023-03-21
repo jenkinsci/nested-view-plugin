@@ -3,6 +3,7 @@ package hudson.plugins.nested_view.search;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -106,8 +107,15 @@ public class ProjectWrapper {
                 Iterator it = project.get().getBuilds().iterator();
                 //-B , -Bn n builds to past
                 List<BuildDetails> buildsList = new ArrayList<>();
-                //-S, -Sn - stats
+                //-S, -Sn - stats ; we want to include also thsoe with 0 occurences, so the order is table like
                 Map<Result, Integer> summ = new HashMap<>();
+                summ.put(Result.ABORTED, 0);
+                summ.put(Result.FAILURE, 0);
+                summ.put(Result.NOT_BUILT, 0);
+                summ.put(Result.SUCCESS, 0);
+                summ.put(Result.UNSTABLE, 0);
+                summ.put(null, 0); //running
+                //if new arrive, it will occure anyway, but out of order
                 int i1 = builds;
                 int i2 = stats;
                 while (it.hasNext()) {
@@ -155,10 +163,11 @@ public class ProjectWrapper {
                     i2--;
                 }
                 if (stats >= 0) {
-                    result.add(new LinkableCandidate(summ.entrySet().stream().map(a ->
-                            a.getKey() == null ? "RUNNING: " + a.getValue() + "x"
-                                    : a.getKey() + ": " + a.getValue() + "x")
-                            .collect(Collectors.joining(", "))));
+                    result.add(new LinkableCandidate(summ.entrySet().stream().sorted((t0, t1) -> {
+                        String l1 = resultToString(t1.getKey());
+                        String l0 = resultToString(t0.getKey());
+                        return l1.compareTo(l0);
+                    }).map(a -> resultToString(a.getKey()) + ": " + a.getValue() + "x").collect(Collectors.joining(", "))));
                 }
                 if (builds >= 0) {
                     result.addAll(buildsList.stream().map(a -> a.toLinkable(project.get().getName())).collect(Collectors.toList()));
@@ -173,6 +182,10 @@ public class ProjectWrapper {
         } else {
             return Arrays.asList(new LinkableCandidate("N/A"));
         }
+    }
+
+    private String resultToString(Result r) {
+        return (r == null) ? "RUNNING" : r.toString();
     }
 
     private void setDateTime(BuildDetails build) {
