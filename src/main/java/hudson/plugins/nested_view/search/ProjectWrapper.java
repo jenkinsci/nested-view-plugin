@@ -109,12 +109,15 @@ public class ProjectWrapper {
                 List<BuildDetails> buildsList = new ArrayList<>();
                 //-S, -Sn - stats ; we want to include also thsoe with 0 occurences, so the order is table like
                 Map<Result, Integer> summ = new HashMap<>();
-                summ.put(Result.ABORTED, 0);
-                summ.put(Result.FAILURE, 0);
-                summ.put(Result.NOT_BUILT, 0);
-                summ.put(Result.SUCCESS, 0);
-                summ.put(Result.UNSTABLE, 0);
-                summ.put(null, 0); //running
+                //SS, prepopulate map
+                if (nvrSearch != null && nvrSearch.isStatsTable()) {
+                    summ.put(Result.ABORTED, 0);
+                    summ.put(Result.FAILURE, 0);
+                    summ.put(Result.NOT_BUILT, 0);
+                    summ.put(Result.SUCCESS, 0);
+                    summ.put(Result.UNSTABLE, 0);
+                    summ.put(null, 0); //running
+                }
                 //if new arrive, it will occure anyway, but out of order
                 int i1 = builds;
                 int i2 = stats;

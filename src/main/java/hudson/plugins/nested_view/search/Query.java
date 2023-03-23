@@ -17,6 +17,7 @@ public class Query {
     private boolean finalFilter;
     private boolean projectInfo;
     private int stats = -1;
+    private boolean statsTable = false;
     private int builds = -1;
     private int last = -1;
     private int sort = 1;
@@ -103,6 +104,9 @@ public class Query {
                 projectInfo = true;
             }
             if (query.contains("S") && search) {
+                if (query.contains("SS")) {
+                        statsTable = true;
+                }
                 stats = getNumber(query, "S", 10);
             }
             if (query.contains("B") && search) {
@@ -208,6 +212,10 @@ public class Query {
 
     public int getStats() {
         return stats;
+    }
+
+    public boolean isStatsTable() {
+        return statsTable;
     }
 
     public int getBuilds() {
