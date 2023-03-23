@@ -98,10 +98,16 @@ public class NestedViewsSearch extends Search {
                 }
             }
             putToHistory(query, hits.size(), new Date());
-            switch (this.query.getSort()){
-                case 2: Collections.sort(hits, new NestedViewsSearchResult.DateComparator()); break;
-                case 3: Collections.sort(hits, new NestedViewsSearchResult.NameComparator()); break;
-                default: Collections.sort(hits, new NestedViewsSearchResult.LenghtComparator()); break;
+            switch (this.query.getSort()) {
+                case 2:
+                    Collections.sort(hits, new NestedViewsSearchResult.DateComparator());
+                    break;
+                case 3:
+                    Collections.sort(hits, new NestedViewsSearchResult.NameComparator());
+                    break;
+                default:
+                    Collections.sort(hits, new NestedViewsSearchResult.LenghtComparator());
+                    break;
             }
         } else {
             Collections.sort(hits, new NestedViewsSearchResult.LenghtComparator());
@@ -161,6 +167,7 @@ public class NestedViewsSearch extends Search {
         r.add(new HelpItem("1", "default - by lenght of items"));
         r.add(new HelpItem("2", "by date - requires B and/or L"));
         r.add(new HelpItem("3", "alphabetically"));
+        r.add(new HelpItem("Tyymmddhhmm", "with B/S, will discard builds older then yymmddhhmm. Good with -t2"));
         r.add(new HelpItem("Xn", "for NEXTn searches Nested View search will be turned off. n is optional number 1-9"));
         r.add(new HelpItem("eg \"-Rjo: dacapo sp[ei]c\"", "will find all Jobs which Matches .*dacapo.* or .*sp[ei]c.* "));
         r.add(new HelpItem(" Project/build details in search: ", ""));

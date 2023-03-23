@@ -3,7 +3,6 @@ package hudson.plugins.nested_view.search;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,6 +30,8 @@ public class ProjectWrapper {
     private final Collection<String> matched;
     private int matchedBuildsCount;
     private Date dateTime = new Date(Integer.MIN_VALUE);
+    private final Date upperTimeLimit;
+    private final Date lowerTimeLimit;
 
     public ProjectWrapper(Optional<AbstractProject> project, boolean multiline, boolean projectInfo, int stats, int last, int builds, Query nvrSearch, Collection<String> matched) {
         this.project = project;
@@ -41,6 +42,17 @@ public class ProjectWrapper {
         this.builds = builds;
         this.nvrSearch = nvrSearch;
         this.matched = matched;
+        if (isTimeLimit()) {
+            this.upperTimeLimit = nvrSearch.getTimeLimit();
+            this.lowerTimeLimit = this.upperTimeLimit;
+        } else {
+            upperTimeLimit = new Date(Long.MAX_VALUE);
+            lowerTimeLimit = new Date(Integer.MIN_VALUE);
+        }
+    }
+
+    private boolean isTimeLimit() {
+        return this.nvrSearch != null && this.nvrSearch.getTimeLimit() != null;
     }
 
     public List<LinkableCandidate> getDetails() {
@@ -140,26 +152,34 @@ public class ProjectWrapper {
                                         if (matches) {
                                             BuildDetails bb = buildToString(b);
                                             setDateTime(bb);
-                                            buildsList.add(bb);
+                                            if (isBuildTimeValid(b)) {
+                                                buildsList.add(bb);
+                                            }
                                         }
                                     } else {
                                         if (!matches) {
                                             BuildDetails bb = buildToString(b);
                                             setDateTime(bb);
-                                            buildsList.add(bb);
+                                            if (isBuildTimeValid(b)) {
+                                                buildsList.add(bb);
+                                            }
                                         }
                                     }
                                 }
                             } else {
                                 BuildDetails bb = buildToString(b);
                                 setDateTime(bb);
-                                buildsList.add(bb);
+                                if (isBuildTimeValid(b)) {
+                                    buildsList.add(bb);
+                                }
                             }
                         }
                         if (i2 > 0) {
                             Integer counter = summ.getOrDefault(b.getResult(), 0);
                             counter = counter + 1;
-                            summ.put(b.getResult(), counter);
+                            if (isBuildTimeValid(b)) {
+                                summ.put(b.getResult(), counter);
+                            }
                         }
                     }
                     i1--;
@@ -185,6 +205,10 @@ public class ProjectWrapper {
         } else {
             return Arrays.asList(new LinkableCandidate("N/A"));
         }
+    }
+
+    private boolean isBuildTimeValid(AbstractBuild b) {
+        return b.getTime().getTime() >= lowerTimeLimit.getTime();
     }
 
     private String resultToString(Result r) {

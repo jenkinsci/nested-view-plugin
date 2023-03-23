@@ -1,7 +1,11 @@
 package hudson.plugins.nested_view.search;
 
+import hudson.plugins.nested_view.NestedViewsSearch;
 import hudson.plugins.nested_view.NestedViewsSearchFactory;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,6 +25,8 @@ public class Query {
     private int builds = -1;
     private int last = -1;
     private int sort = 1;
+
+    private String yymmddhhmm = null;
 
     public String getOriginal() {
         return original;
@@ -81,7 +87,7 @@ public class Query {
                 NestedViewsSearchFactory.setTmpSkip(n);
             }
             if ((query.contains("D") || query.contains("d"))) {
-                if(search) {
+                if (search) {
                     if (query.contains("D")) {
                         finalFilter = true;
                         searchByNvr = getNumber(query, "D", 1);
@@ -105,7 +111,7 @@ public class Query {
             }
             if (query.contains("S") && search) {
                 if (query.contains("SS")) {
-                        statsTable = true;
+                    statsTable = true;
                 }
                 stats = getNumber(query, "S", 10);
             }
@@ -119,6 +125,15 @@ public class Query {
                 }
             } else {
                 last = -1;
+            }
+            if (query.contains("T") && search) {
+                long time = getLongNumber(query, "T", 0);
+                String stime = "" + time;
+                if (stime.length() == 10) {
+                    yymmddhhmm = stime;
+                } else {
+                    NestedViewsSearch.LOGGER.log(Level.WARNING, "T have invlaid argument - " + stime + "; is not 10 chars of yymmddhhmm long");
+                }
             }
             if (query.contains("t")) {
                 sort = getNumber(query, "t", 1);
@@ -192,12 +207,16 @@ public class Query {
 
 
     private int getNumber(String query, String switcher, int n) {
+        return (int) getLongNumber(query, switcher, n);
+    }
+
+    private long getLongNumber(String query, String switcher, long n) {
         String l = query.replaceAll(".*" + switcher, "");
         l = l.replaceAll("[^0-9].*", "");
         try {
-            n = Integer.parseInt(l);
+            n = Long.parseLong(l);
         } catch (Exception ex) {
-            //ok
+            NestedViewsSearch.LOGGER.log(Level.WARNING, "no reasonabl enumber from " + l, ex);
         }
         return n;
     }
@@ -240,6 +259,18 @@ public class Query {
 
     public boolean isInvert() {
         return invert;
+    }
+
+    public Date getTimeLimit() {
+        try {
+            if (yymmddhhmm == null) {
+                return null;
+            }
+            return new SimpleDateFormat("yyMMddHHmm").parse(yymmddhhmm);
+        } catch (Exception ex) {
+            NestedViewsSearch.LOGGER.log(Level.WARNING, ex.toString(), ex);
+            return null;
+        }
     }
 
     public boolean isNonTrivial(boolean suggesting) {
