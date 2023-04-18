@@ -25,7 +25,7 @@ public class ProjectWrapper {
     private final int stats;
     private final int last;
     private final int builds;
-    private final Query nvrSearch;
+    private final Query query;
     private List<LinkableCandidate> details;
     private final Collection<String> matched;
     private int matchedBuildsCount;
@@ -33,17 +33,17 @@ public class ProjectWrapper {
     private final Date upperTimeLimit;
     private final Date lowerTimeLimit;
 
-    public ProjectWrapper(Optional<AbstractProject> project, boolean multiline, boolean projectInfo, int stats, int last, int builds, Query nvrSearch, Collection<String> matched) {
+    public ProjectWrapper(Optional<AbstractProject> project, boolean multiline, boolean projectInfo, int stats, int last, int builds, Query query, Collection<String> matched) {
         this.project = project;
         this.multiline = multiline;
         this.projectInfo = projectInfo;
         this.stats = stats;
         this.last = last;
         this.builds = builds;
-        this.nvrSearch = nvrSearch;
+        this.query = query;
         this.matched = matched;
         if (isTimeLimit()) {
-            this.upperTimeLimit = nvrSearch.getTimeLimit();
+            this.upperTimeLimit = query.getTimeLimit();
             this.lowerTimeLimit = this.upperTimeLimit;
         } else {
             upperTimeLimit = new Date(Long.MAX_VALUE);
@@ -52,7 +52,7 @@ public class ProjectWrapper {
     }
 
     private boolean isTimeLimit() {
-        return this.nvrSearch != null && this.nvrSearch.getTimeLimit() != null;
+        return this.query != null && this.query.getTimeLimit() != null;
     }
 
     public List<LinkableCandidate> getDetails() {
@@ -122,7 +122,7 @@ public class ProjectWrapper {
                 //-S, -Sn - stats ; we want to include also thsoe with 0 occurences, so the order is table like
                 Map<Result, Integer> summ = new HashMap<>();
                 //SS, prepopulate map
-                if (nvrSearch != null && nvrSearch.isStatsTable()) {
+                if (query != null && query.isStatsTable()) {
                     summ.put(Result.ABORTED, 0);
                     summ.put(Result.FAILURE, 0);
                     summ.put(Result.NOT_BUILT, 0);
@@ -141,14 +141,14 @@ public class ProjectWrapper {
                     if (q instanceof AbstractBuild) {
                         AbstractBuild b = (AbstractBuild) q;
                         if (i1 > 0) {
-                            if (nvrSearch != null && nvrSearch.isSearchByNvr() >= 0) {
-                                for (String candidate : nvrSearch.getWithoutArgumentsSplit()) {
-                                    if (nvrSearch.isSearchByNvr() == 1 && matched != null && matched.contains(candidate)) {
+                            if (query != null && query.isSearchByNvr() >= 0) {
+                                for (String candidate : query.getWithoutArgumentsSplit()) {
+                                    if (query.isSearchByNvr() == 1 && matched != null && matched.contains(candidate)) {
                                         continue;
                                     }
                                     String displayName = b.getDisplayName();
-                                    boolean matches = NamableWithClass.matchSingle(displayName, candidate, nvrSearch.getHow());
-                                    if (!nvrSearch.isInvert()) {
+                                    boolean matches = NamableWithClass.matchSingle(displayName, candidate, query.getHow());
+                                    if (!query.isInvert()) {
                                         if (matches) {
                                             BuildDetails bb = buildToString(b);
                                             setDateTime(bb);
@@ -193,7 +193,10 @@ public class ProjectWrapper {
                     }).map(a -> resultToString(a.getKey()) + ": " + a.getValue() + "x").collect(Collectors.joining(", "))));
                 }
                 if (builds >= 0) {
-                    result.addAll(buildsList.stream().map(a -> a.toLinkable(project.get().getName())).collect(Collectors.toList()));
+                    for (BuildDetails a : buildsList) {
+                        LinkableCandidate linkableCandidate = a.toLinkable(project.get().getName());
+                        result.add(linkableCandidate);
+                    }
                 }
                 matchedBuildsCount = buildsList.size();
             }
@@ -228,7 +231,11 @@ public class ProjectWrapper {
     }
 
     private BuildDetails specifiedBuild(String s, Run lastBuild) {
-        return lastBuild != null ? new BuildDetails(s, lastBuild) : new BuildDetails(s, null, null, null, null, new Date(0));
+        int archives = 0;
+        if (query.isSearchByArtifacts() > 0) {
+            archives = Math.max(0, query.getMaxArtifacts());
+        }
+        return lastBuild != null ? new BuildDetails(s, lastBuild, archives) : new BuildDetails(s, null, null, null, null, new Date(0), new ArrayList<>(0));
     }
 
     private BuildDetails buildToString(Run ab) {
@@ -237,10 +244,10 @@ public class ProjectWrapper {
 
     public boolean isStillValid() {
         if (project.isPresent()) {
-            if (nvrSearch == null) {
+            if (query == null) {
                 return true;
             } else {
-                if (nvrSearch.isFinalFilter() && matchedBuildsCount <= 0) {
+                if (query.isFinalFilter() && matchedBuildsCount <= 0) {
                     return false;
                 } else {
                     return true;

@@ -179,10 +179,16 @@ public class NestedViewsSearch extends Search {
         r.add(new HelpItem("S x B x L", "S and B switches are iterating to the past. This may have significant performance impact! L should be fast always"));
         r.add(new HelpItem("d",
                 "will search also in DisplayName. In addition it sets `-oB` as OR and Build details are required for it to work. The OR is enforcing you to filter jobs first and name as second"));
-        r.add(new HelpItem("D",
-                "Same as -d, but only projects with at least one matching build will be shown. -d/-D  do not affect suggestions and can be acompanied by number - algorithm: "));
-        r.add(new HelpItem("1: ", "default, what mathced project name, is not used in displayName search. -! is weird here, not sure what to do better"));
-        r.add(new HelpItem("2: ", "all yor expressions are used used in displayName search"));
+        r.add(new HelpItem("i",
+                "will search also in artifacts. In addition it sets `-oB` as OR and Build details are required for it to work. The OR is enforcing you to filter jobs first and name as second"));
+        r.add(new HelpItem("A",
+                "is controlling, how many artifacts in most to search through. Default 10. Reasonable numbers ends in some 100. Without i/I useless"));
+        r.add(new HelpItem("D/I",
+                "Same as -d/-i, but only projects with at least one matching build will be shown. -d/-D -i/-I  do not affect suggestions and can be acompanied by number - algorithm: "));
+        r.add(new HelpItem("1: ", "default, what mathced project name, is not used in displayName/artifact search. -! is weird here, not sure what to do better"));
+        r.add(new HelpItem("2: ", "all yor expressions are used used in displayName/artifact search"));
+        r.add(new HelpItem("note",
+                "Algortihm is shared between i/I/d/D if you set it once, yo can not unset it."));
         return r;
     }
 

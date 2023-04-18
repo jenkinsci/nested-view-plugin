@@ -18,6 +18,8 @@ public class Query {
 
     private boolean multiline;
     private int searchByNvr = -1;
+    private int searchByArtifacts = -1;
+    private int maxArtifacts = -1;
     private boolean finalFilter;
     private boolean projectInfo;
     private int stats = -1;
@@ -91,10 +93,8 @@ public class Query {
                     if (query.contains("D")) {
                         finalFilter = true;
                         searchByNvr = getNumber(query, "D", 1);
-                        ;
                     } else {
                         searchByNvr = getNumber(query, "d", 1);
-                        ;
                     }
                 }
                 bool = "o";
@@ -102,7 +102,28 @@ public class Query {
                     builds = 10;
                 }
             }
-
+            if ((query.contains("I") || query.contains("i"))) {
+                if (search) {
+                    if (query.contains("I")) {
+                        finalFilter = true;
+                        searchByArtifacts = getNumber(query, "I", 1);
+                    } else {
+                        searchByArtifacts = getNumber(query, "i", 1);
+                    }
+                }
+                bool = "o";
+                if (builds <= 0) { //maybe it was already set
+                    builds = 10;
+                }
+                if (maxArtifacts <= 0) { //maybe it was already set
+                    maxArtifacts = 10;
+                }
+            }
+            if (query.contains("A")) {
+                if (search) {
+                        maxArtifacts = getNumber(query, "A", 10);
+                }
+            }
             if (query.contains("m") && search) {
                 multiline = true;
             }
@@ -251,6 +272,14 @@ public class Query {
 
     public int isSearchByNvr() {
         return searchByNvr;
+    }
+
+    public int isSearchByArtifacts() {
+        return searchByArtifacts;
+    }
+
+    public int getMaxArtifacts() {
+        return maxArtifacts;
     }
 
     public boolean isFinalFilter() {
