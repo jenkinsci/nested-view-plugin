@@ -237,7 +237,7 @@ public class Query {
         try {
             n = Long.parseLong(l);
         } catch (Exception ex) {
-            NestedViewsSearch.LOGGER.log(Level.WARNING, "no reasonabl enumber from " + l, ex);
+            NestedViewsSearch.LOGGER.log(Level.INFO, "no reasonable number from " + l, ex);
         }
         return n;
     }
