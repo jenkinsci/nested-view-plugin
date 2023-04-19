@@ -57,6 +57,22 @@
                                                     ${detail.getPlainText()}
                                                 </j:otherwise>
                                             </j:choose>
+                                            <j:if test="${detail.getSublinks().size() > 0}">
+                                                <j:if test="${hit.project.isMultiline()}">
+                                                    <br/>
+                                                </j:if>
+                                                <j:forEach var="sublink" items="${detail.getSublinks()}" varStatus="status"> <!-- LinkableCandidate -->
+                                                    <j:if test="${hit.project.isMultiline()}">
+                                                        <st:nbsp/>*<st:nbsp/>
+                                                    </j:if>
+                                                    (${sublink.getPrefix()}<a href="${sublink.getUrl()}">${sublink.getPlainText()}</a>${sublink.getSuffix()})
+                                                    <j:if test="${hit.project.isMultiline()}">
+                                                        <j:if test="${!status.last}">
+                                                            <br/>
+                                                        </j:if>
+                                                    </j:if>
+                                                </j:forEach>
+                                            </j:if>
                                             <j:choose>
                                                 <j:when test="${hit.project.isMultiline()}">
                                                     <br/>

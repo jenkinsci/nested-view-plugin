@@ -1,18 +1,23 @@
 package hudson.plugins.nested_view.search;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LinkableCandidate {
     private final String plainText;
     private final boolean canLink;
     private final String prefix;
     private final String suffix;
     private final String url;
+    private final List<LinkableCandidate> sublinks;
 
-    public LinkableCandidate(String prefix, String link, String suffix, String url) {
+    public LinkableCandidate(String prefix, String link, String suffix, String url, List<LinkableCandidate> sublinks) {
         this.plainText = link;
         this.canLink = true;
         this.prefix = prefix;
         this.suffix = suffix;
         this.url = url;
+        this.sublinks = sublinks;
     }
 
     public LinkableCandidate(String plainText) {
@@ -21,6 +26,7 @@ public class LinkableCandidate {
         this.prefix = null;
         this.suffix = null;
         this.url = null;
+        this.sublinks = new ArrayList<LinkableCandidate>(0);
     }
 
     public String getPlainText() {
@@ -43,4 +49,7 @@ public class LinkableCandidate {
         return canLink;
     }
 
+    public List<LinkableCandidate> getSublinks() {
+        return sublinks;
+    }
 }
