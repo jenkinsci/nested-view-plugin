@@ -6,6 +6,7 @@ import hudson.model.Run;
 import jenkins.model.Jenkins;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -50,7 +51,7 @@ public class BuildDetails {
         }
     }
 
-    public LinkableCandidate toLinkable(String projectName) {
+    public LinkableCandidate toLinkable(String projectName, SearchArtifactsOptions searchArtifactsOptions) {
         if (id != null) {
             String pre = "";
             String link;
@@ -65,7 +66,29 @@ public class BuildDetails {
             if (artifacts.size()>0) {
                 post += " ("+artifacts.size()+" artifacts)";
             }
-            return new LinkableCandidate(pre, link, post, getJenkinsUrl() + "/job/" + projectName + "/" + id);
+            List<LinkableCandidate> sublinks = new ArrayList<>(artifacts.size());
+            if(searchArtifactsOptions != null) {
+                for (Run.Artifact artifact : artifacts) {
+                    for (String candidate : searchArtifactsOptions.query) {
+                        if (searchArtifactsOptions.algorithm == 1 && searchArtifactsOptions.matched != null && searchArtifactsOptions.matched.contains(candidate)) {
+                            continue;
+                        }
+                        boolean matches = NamableWithClass.matchSingle(artifact.relativePath, candidate, searchArtifactsOptions.how);
+                        if (!searchArtifactsOptions.invert) {
+                            if (matches) {
+                                sublinks.add(new LinkableCandidate("", artifact.relativePath, "", getJenkinsUrl() + "/job/" + projectName + "/" + id + "/artifact/" + artifact.relativePath, new ArrayList<>(0)));
+                            }
+                        } else {
+                            if (!matches) {
+                                sublinks.add(new LinkableCandidate("", artifact.relativePath, "", getJenkinsUrl() + "/job/" + projectName + "/" + id + "/artifact/" + artifact.relativePath, new ArrayList<>(0)));
+                            }
+                        }
+
+
+                    }
+                }
+            }
+            return new LinkableCandidate(pre, link, post, getJenkinsUrl() + "/job/" + projectName + "/" + id, sublinks);
         } else {
             return new LinkableCandidate(prefix + "n/a");
         }
@@ -77,5 +100,21 @@ public class BuildDetails {
 
     public long getDateTime() {
         return dateTime.getTime();
+    }
+
+    static class SearchArtifactsOptions {
+        private final String[] query;
+        private final int algorithm;
+        private final Collection<String> matched;
+        private final String how;
+        private final boolean invert;
+
+        public SearchArtifactsOptions(String[] query, int algorithm,  Collection<String> matched, String how, boolean invert) {
+            this.query = query;
+            this.algorithm = algorithm;
+            this.matched = matched;
+            this.how = how;
+            this.invert = invert;
+        }
     }
 }

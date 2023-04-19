@@ -26,6 +26,7 @@ public class ProjectWrapper {
     private final int last;
     private final int builds;
     private final Query query;
+    private final BuildDetails.SearchArtifactsOptions artifactSearch;
     private List<LinkableCandidate> details;
     private final Collection<String> matched;
     private int matchedBuildsCount;
@@ -42,6 +43,17 @@ public class ProjectWrapper {
         this.builds = builds;
         this.query = query;
         this.matched = matched;
+        if (query!=null) {
+            artifactSearch = new BuildDetails.SearchArtifactsOptions(
+                    query.getWithoutArgumentsSplit(),
+                    query.isSearchByArtifacts(),
+                    matched,
+                    query.getHow(),
+                    query.isInvert()
+            );
+        } else {
+            artifactSearch = null;
+        }
         if (isTimeLimit()) {
             this.upperTimeLimit = query.getTimeLimit();
             this.lowerTimeLimit = this.upperTimeLimit;
@@ -82,36 +94,36 @@ public class ProjectWrapper {
                 if (s.contains("1")) {//-L1
                     BuildDetails lastBuild = specifiedBuild(" last build           : ", project.get().getLastBuild());
                     setDateTime(lastBuild);
-                    result.add(lastBuild.toLinkable(project.get().getName()));
+                    result.add(lastBuild.toLinkable(project.get().getName(), artifactSearch));
                 }
                 if (s.contains("2")) {//-L2
                     BuildDetails lastStable = specifiedBuild(" last stable build    : ", project.get().getLastStableBuild());
                     setDateTime(lastStable);
-                    result.add(lastStable.toLinkable(project.get().getName()));
+                    result.add(lastStable.toLinkable(project.get().getName(), artifactSearch));
                 }
                 if (s.contains("3")) {//-L3
                     BuildDetails lastSuc = specifiedBuild(" last success build   : ", project.get().getLastSuccessfulBuild());
                     setDateTime(lastSuc);
-                    result.add(lastSuc.toLinkable(project.get().getName()));
+                    result.add(lastSuc.toLinkable(project.get().getName(), artifactSearch));
                 }
                 if (s.contains("4")) {//-L4
                     BuildDetails lastUnst = specifiedBuild(" last unstable build  : ", project.get().getLastUnstableBuild());
-                    result.add(lastUnst.toLinkable(project.get().getName()));
+                    result.add(lastUnst.toLinkable(project.get().getName(), artifactSearch));
                 }
                 if (s.contains("5")) {//-L5
                     BuildDetails lastFail = specifiedBuild(" last failed build    : ", project.get().getLastFailedBuild());
                     setDateTime(lastFail);
-                    result.add(lastFail.toLinkable(project.get().getName()));
+                    result.add(lastFail.toLinkable(project.get().getName(), artifactSearch));
                 }
                 if (s.contains("6")) {//-L6
                     BuildDetails lastUnsuc = specifiedBuild(" last unsuccess build : ", project.get().getLastUnsuccessfulBuild());
                     setDateTime(lastUnsuc);
-                    result.add(lastUnsuc.toLinkable(project.get().getName()));
+                    result.add(lastUnsuc.toLinkable(project.get().getName(), artifactSearch));
                 }
                 if (s.contains("7")) {//-L7
                     BuildDetails lastComp = specifiedBuild(" last completed build : ", project.get().getLastCompletedBuild());
                     setDateTime(lastComp);
-                    result.add(lastComp.toLinkable(project.get().getName()));
+                    result.add(lastComp.toLinkable(project.get().getName(), artifactSearch));
                 }
             }
 
@@ -194,7 +206,7 @@ public class ProjectWrapper {
                 }
                 if (builds >= 0) {
                     for (BuildDetails a : buildsList) {
-                        LinkableCandidate linkableCandidate = a.toLinkable(project.get().getName());
+                        LinkableCandidate linkableCandidate = a.toLinkable(project.get().getName(), artifactSearch);
                         result.add(linkableCandidate);
                     }
                 }
