@@ -30,6 +30,7 @@ public class ProjectWrapper {
     private List<LinkableCandidate> details;
     private final Collection<String> matched;
     private int matchedBuildsCount;
+    private int matchedArtifactsCount;
     private Date dateTime = new Date(Integer.MIN_VALUE);
     private final Date upperTimeLimit;
     private final Date lowerTimeLimit;
@@ -94,36 +95,36 @@ public class ProjectWrapper {
                 if (s.contains("1")) {//-L1
                     BuildDetails lastBuild = specifiedBuild(" last build           : ", project.get().getLastBuild());
                     setDateTime(lastBuild);
-                    result.add(lastBuild.toLinkable(project.get().getName(), artifactSearch));
+                    result.add(lastBuild.toLinkable(project.get().getName(), artifactSearch, this));
                 }
                 if (s.contains("2")) {//-L2
                     BuildDetails lastStable = specifiedBuild(" last stable build    : ", project.get().getLastStableBuild());
                     setDateTime(lastStable);
-                    result.add(lastStable.toLinkable(project.get().getName(), artifactSearch));
+                    result.add(lastStable.toLinkable(project.get().getName(), artifactSearch, this));
                 }
                 if (s.contains("3")) {//-L3
                     BuildDetails lastSuc = specifiedBuild(" last success build   : ", project.get().getLastSuccessfulBuild());
                     setDateTime(lastSuc);
-                    result.add(lastSuc.toLinkable(project.get().getName(), artifactSearch));
+                    result.add(lastSuc.toLinkable(project.get().getName(), artifactSearch, this));
                 }
                 if (s.contains("4")) {//-L4
                     BuildDetails lastUnst = specifiedBuild(" last unstable build  : ", project.get().getLastUnstableBuild());
-                    result.add(lastUnst.toLinkable(project.get().getName(), artifactSearch));
+                    result.add(lastUnst.toLinkable(project.get().getName(), artifactSearch, this));
                 }
                 if (s.contains("5")) {//-L5
                     BuildDetails lastFail = specifiedBuild(" last failed build    : ", project.get().getLastFailedBuild());
                     setDateTime(lastFail);
-                    result.add(lastFail.toLinkable(project.get().getName(), artifactSearch));
+                    result.add(lastFail.toLinkable(project.get().getName(), artifactSearch, this));
                 }
                 if (s.contains("6")) {//-L6
                     BuildDetails lastUnsuc = specifiedBuild(" last unsuccess build : ", project.get().getLastUnsuccessfulBuild());
                     setDateTime(lastUnsuc);
-                    result.add(lastUnsuc.toLinkable(project.get().getName(), artifactSearch));
+                    result.add(lastUnsuc.toLinkable(project.get().getName(), artifactSearch, this));
                 }
                 if (s.contains("7")) {//-L7
                     BuildDetails lastComp = specifiedBuild(" last completed build : ", project.get().getLastCompletedBuild());
                     setDateTime(lastComp);
-                    result.add(lastComp.toLinkable(project.get().getName(), artifactSearch));
+                    result.add(lastComp.toLinkable(project.get().getName(), artifactSearch, this));
                 }
             }
 
@@ -206,7 +207,7 @@ public class ProjectWrapper {
                 }
                 if (builds >= 0) {
                     for (BuildDetails a : buildsList) {
-                        LinkableCandidate linkableCandidate = a.toLinkable(project.get().getName(), artifactSearch);
+                        LinkableCandidate linkableCandidate = a.toLinkable(project.get().getName(), artifactSearch, this);
                         result.add(linkableCandidate);
                     }
                 }
@@ -259,15 +260,28 @@ public class ProjectWrapper {
             if (query == null) {
                 return true;
             } else {
-                if (query.isFinalFilter() && matchedBuildsCount <= 0) {
-                    return false;
-                } else {
-                    return true;
+                if (query.isSearchByNvr()>0) {
+                    if (query.isNvrFinalFilter() && matchedBuildsCount <= 0) {
+                        return false;
+                    } else {
+                        return true;
+                    }
                 }
+                if (query.isSearchByArtifacts()>0) {
+                    if (query.isArtifactFinalFilter() && matchedArtifactsCount <= 0) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
+                return true;
             }
         } else {
             return true;
         }
     }
 
+    public void addArtifactCouont() {
+        matchedArtifactsCount++;
+    }
 }
