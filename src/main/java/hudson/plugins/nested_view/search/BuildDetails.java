@@ -51,7 +51,7 @@ public class BuildDetails {
         }
     }
 
-    public LinkableCandidate toLinkable(String projectName, SearchArtifactsOptions searchArtifactsOptions) {
+    public LinkableCandidate toLinkable(String projectName, SearchArtifactsOptions searchArtifactsOptions, ProjectWrapper listener) {
         if (id != null) {
             String pre = "";
             String link;
@@ -77,14 +77,18 @@ public class BuildDetails {
                         if (!searchArtifactsOptions.invert) {
                             if (matches) {
                                 sublinks.add(new LinkableCandidate("", artifact.relativePath, "", getJenkinsUrl() + "/job/" + projectName + "/" + id + "/artifact/" + artifact.relativePath, new ArrayList<>(0)));
+                                if (listener!=null){
+                                    listener.addArtifactCouont();
+                                }
+                                break;
                             }
                         } else {
                             if (!matches) {
                                 sublinks.add(new LinkableCandidate("", artifact.relativePath, "", getJenkinsUrl() + "/job/" + projectName + "/" + id + "/artifact/" + artifact.relativePath, new ArrayList<>(0)));
+                                listener.addArtifactCouont();
+                                break;
                             }
                         }
-
-
                     }
                 }
             }

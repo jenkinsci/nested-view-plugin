@@ -20,7 +20,8 @@ public class Query {
     private int searchByNvr = -1;
     private int searchByArtifacts = -1;
     private int maxArtifacts = -1;
-    private boolean finalFilter;
+    private boolean nvrFinalFilter;
+    private boolean artifactFinalFilter;
     private boolean projectInfo;
     private int stats = -1;
     private boolean statsTable = false;
@@ -91,7 +92,7 @@ public class Query {
             if ((query.contains("D") || query.contains("d"))) {
                 if (search) {
                     if (query.contains("D")) {
-                        finalFilter = true;
+                        nvrFinalFilter = true;
                         searchByNvr = getNumber(query, "D", 1);
                     } else {
                         searchByNvr = getNumber(query, "d", 1);
@@ -105,7 +106,7 @@ public class Query {
             if ((query.contains("I") || query.contains("i"))) {
                 if (search) {
                     if (query.contains("I")) {
-                        finalFilter = true;
+                        artifactFinalFilter = true;
                         searchByArtifacts = getNumber(query, "I", 1);
                     } else {
                         searchByArtifacts = getNumber(query, "i", 1);
@@ -282,8 +283,12 @@ public class Query {
         return maxArtifacts;
     }
 
-    public boolean isFinalFilter() {
-        return finalFilter;
+    public boolean isNvrFinalFilter() {
+        return nvrFinalFilter;
+    }
+
+    public boolean isArtifactFinalFilter() {
+        return artifactFinalFilter;
     }
 
     public boolean isInvert() {
