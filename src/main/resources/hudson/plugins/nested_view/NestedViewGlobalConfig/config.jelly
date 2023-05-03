@@ -4,5 +4,15 @@
         <f:entry title="Enable nested view search" field="nestedViewSearch">
             <f:checkbox/>
         </f:entry>
+        <f:entry title="Search history count" field="nestedViewHistoryCount">
+            <f:number min="0" max="10000"/>
+        </f:entry>
+        <f:section title="search history content">
+            <f:advanced>
+                <f:entry title="edit as needed:" field="historyContent">
+                    <f:textarea/>
+                </f:entry>
+            </f:advanced>
+        </f:section>
     </f:section>
 </j:jelly>

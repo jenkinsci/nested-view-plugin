@@ -1,14 +1,15 @@
 package hudson.plugins.nested_view.search;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.plugins.nested_view.NestedViewGlobalConfig;
 import hudson.plugins.nested_view.NestedViewsSearch;
-import jenkins.model.Jenkins;
 
 import java.io.File;
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -17,9 +18,12 @@ import java.util.stream.Collectors;
 
 public class HistoryItem {
 
-    private static final int MAX_HISTORY = 500;
-    private static final File historyCache = new File(Jenkins.get().root, ".nested-view-serch.cache");
-    private static final List<HistoryItem> history = HistoryItem.load();
+    private static List<HistoryItem> history;
+
+    private static void save() {
+        NestedViewGlobalConfig.getInstance().setHistoryContent(saveToString());
+        NestedViewGlobalConfig.getInstance().save();
+    }
 
     private final String query;
     private final int size;
@@ -32,28 +36,45 @@ public class HistoryItem {
         this.date = date;
     }
 
-    public static void save() {
+    private static void saveToFile(File f) {
         try {
-            saveImp();
+            Files.write(f.toPath(), saveToString().getBytes(StandardCharsets.UTF_8));
         } catch (Exception ex) {
             NestedViewsSearch.LOGGER.log(Level.SEVERE, "saving nested view search history failed", ex);
         }
     }
 
-    public static void saveImp() throws IOException {
-        Files.write(historyCache.toPath(), history.stream().map(a -> a.toSave()).collect(Collectors.toList()));
+    private static String saveToString() {
+        return history.stream().map(a -> a.toSave()).collect(Collectors.joining("\n"));
     }
 
-    public static List<HistoryItem> load() {
+    private static List<HistoryItem> loadFromFile(File f) {
         List<String> l = new ArrayList<>(0);
-        if (historyCache.exists()) try {
-            l = Files.readAllLines(historyCache.toPath());
-        } catch (Exception ex) {
-            NestedViewsSearch.LOGGER.log(Level.SEVERE, "loading nested view search history failed", ex);
+        if (f.exists()) {
+            try {
+                l = Files.readAllLines(f.toPath());
+            } catch (Exception ex) {
+                NestedViewsSearch.LOGGER.log(Level.SEVERE, "loading nested view search history failed", ex);
+            }
         }
-        ArrayList<HistoryItem> r = new ArrayList(MAX_HISTORY);
+        return loadFromStrings(l);
+    }
+
+    private static List<HistoryItem> loadFromString(String l) {
+        return loadFromStrings(Arrays.asList(l.split("\n")));
+    }
+
+    private static void load() {
+        history = loadFromString(NestedViewGlobalConfig.getInstance().getHistoryContent());
+    }
+
+    private static List<HistoryItem> loadFromStrings(List<String> l) {
+        ArrayList<HistoryItem> r = new ArrayList(NestedViewGlobalConfig.getInstance().getNestedViewHistoryCount());
         for (String s : l) {
             try {
+                if (s == null || s.trim().isEmpty()) {
+                    continue;
+                }
                 r.add(new HistoryItem(s));
             } catch (Exception ex) {
                 NestedViewsSearch.LOGGER.log(Level.SEVERE, "reading nested view search history " + s + " failed", ex);
@@ -63,16 +84,27 @@ public class HistoryItem {
     }
 
     public static List<HistoryItem> get() {
+        load();
         return Collections.unmodifiableList(history);
     }
 
     public static void add(HistoryItem his) {
+        load();
         history.removeAll(Collections.singleton(his));
         history.add(0, his);
-        while (history.size() > MAX_HISTORY) {
+        shrink();
+        save();
+    }
+
+    private static void shrink() {
+        shrink(NestedViewGlobalConfig.getInstance().getNestedViewHistoryCount());
+    }
+
+    private static void shrink(final int to) {
+        int tot = to < 0 ? 0 : to;
+        while (history.size() > tot) {
             history.remove(history.size() - 1);
         }
-        save();
     }
 
     @Override

@@ -16,6 +16,8 @@ public class NestedViewGlobalConfig extends GlobalConfiguration {
     private static Logger logger = Logger.getLogger(NestedViewGlobalConfig.class.getName());
 
     boolean nestedViewSearch = true;
+    int nestedViewHistoryCount = 500;
+    String historyContent = "";
 
     public static NestedViewGlobalConfig getInstance() {
         return GlobalConfiguration.all().get(NestedViewGlobalConfig.class);
@@ -31,14 +33,34 @@ public class NestedViewGlobalConfig extends GlobalConfiguration {
         return nestedViewSearch;
     }
 
+    public int getNestedViewHistoryCount() {
+        return nestedViewHistoryCount;
+    }
+
+    public String getHistoryContent() {
+        return historyContent;
+    }
+
     @DataBoundSetter
     public void setNestedViewSearch(boolean nestedViewSearch) {
         this.nestedViewSearch = nestedViewSearch;
     }
 
+    @DataBoundSetter
+    public void setNestedViewHistoryCount(int nestedViewHistoryCount) {
+        this.nestedViewHistoryCount = nestedViewHistoryCount;
+    }
+
+    @DataBoundSetter
+    public void setHistoryContent(String historyContent) {
+       this.historyContent = historyContent;
+    }
+
     @DataBoundConstructor
-    public NestedViewGlobalConfig(boolean nestedViewSearch) {
+    public NestedViewGlobalConfig(boolean nestedViewSearch, int nestedViewHistoryCount, String historyContent) {
         this.nestedViewSearch = nestedViewSearch;
+        this.nestedViewHistoryCount = nestedViewHistoryCount;
+        this.historyContent = historyContent;
     }
 
     public NestedViewGlobalConfig() {
