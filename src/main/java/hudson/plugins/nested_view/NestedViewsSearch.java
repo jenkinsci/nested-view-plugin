@@ -54,7 +54,7 @@ public class NestedViewsSearch extends Search {
             Jenkins j = Jenkins.get();
             for (TopLevelItem ti : j.getItems()) {
                 if (ti instanceof AbstractProject) {
-                    all.add(new NamableWithClass(ti, ti.getName(), ti.getName()));
+                    all.add(new NamableWithClass(ti, ti.getName(), ti.getName(), ((AbstractProject<?, ?>) ti).getDescription()));
                 }
             }
             addViewsRecursively(j.getViews(), "/", all);
@@ -66,10 +66,10 @@ public class NestedViewsSearch extends Search {
         for (View v : views) {
             if (v instanceof NestedView) {
                 NestedView nw = (NestedView) v;
-                all.add(new NamableWithClass(v, v.getViewName(), s + v.getViewName()));
+                all.add(new NamableWithClass(v, v.getViewName(), s + v.getViewName(),  nw.getDescription()));
                 addViewsRecursively(((NestedView) v).getViews(), s + v.getViewName() + "/", all);
             } else {
-                all.add(new NamableWithClass(v, v.getViewName(), s + v.getViewName()));
+                all.add(new NamableWithClass(v, v.getViewName(), s + v.getViewName(), v.getDescription()));
             }
         }
     }
@@ -162,6 +162,9 @@ public class NestedViewsSearch extends Search {
         r.add(new HelpItem("v", "search only in views (default is in all) -jw (-jvn)"));
         r.add(new HelpItem("n", "search only in nested views (default is in all -jw (-jvn))"));
         r.add(new HelpItem("w", "search only in views and nested views (default is in all -jw (-jvn))"));
+        r.add(new HelpItem("#", "will show job description"));
+        r.add(new HelpItem("##",
+                "will search job description"));
         r.add(new HelpItem("!", "invert result"));
         r.add(new HelpItem("t", "sort results; have digital parameter:"));
         r.add(new HelpItem("1", "default - by lenght of items"));
@@ -175,20 +178,25 @@ public class NestedViewsSearch extends Search {
         r.add(new HelpItem("P", "will include project details"));
         r.add(new HelpItem("Ln", "will add information about last builds. Plain L c an be followed by mask of numbers 1-last,2-stable,3-green,4-yellow,5-red,6-unsuccess,7-completed"));
         r.add(new HelpItem("Bn", "details about builds. N is limiting am amount of builds. Default is 10!"));
+        r.add(new HelpItem("/", "will show builds description"));
         r.add(new HelpItem("Sn", "statistics (like weather, but in numbers). N is limiting am amount of builds. Default is 10! If you use SS, then all, even unused resutls will be shown"));
         r.add(new HelpItem("S x B x L", "S and B switches are iterating to the past. This may have significant performance impact! L should be fast always"));
         r.add(new HelpItem("d",
                 "will search also in DisplayName. In addition it sets `-oB` as OR and Build details are required for it to work. The OR is enforcing you to filter jobs first and name as second"));
         r.add(new HelpItem("i",
-                "will search also in artifacts. In addition it sets `-oB` as OR and Build details are required for it to work. The OR is enforcing you to filter jobs first and name as second"));
+                "will search also in artifacts. In addition it sets `-oB` as OR and Build details are required for it to work. The OR is enforcing you to filter jobs first and artifact name as second"));
+        r.add(new HelpItem("//",
+                "will search also in build description. In addition it sets `-oB` as OR and Build details are required for it to work. The OR is enforcing you to filter jobs first and build description as second"));
         r.add(new HelpItem("A",
                 "is controlling, how many artifacts in most to search through. Default 10. Reasonable numbers ends in some 100. Without i/I useless"));
         r.add(new HelpItem("D/I",
                 "Same as -d/-i, but only projects with at least one matching build will be shown. -d/-D -i/-I  do not affect suggestions and can be acompanied by number - algorithm: "));
+        r.add(new HelpItem("///",
+                "Same as //, but shows only projects with at least one matching description in build. Build descriptions do not affect suggestions and can be accompanied by number - algorithm: "));
         r.add(new HelpItem("1: ", "default, what mathced project name, is not used in displayName/artifact search. -! is weird here, not sure what to do better"));
         r.add(new HelpItem("2: ", "all yor expressions are used used in displayName/artifact search"));
         r.add(new HelpItem("note",
-                "Algortihm is shared between i/I/d/D if you set it once, yo can not unset it."));
+                "Algortihm is shared between i/I/d/D and /// or // if you set it once, yo can not unset it."));
         return r;
     }
 

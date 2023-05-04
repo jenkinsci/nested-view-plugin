@@ -50,7 +50,8 @@ public class ProjectWrapper {
                     query.isSearchByArtifacts(),
                     matched,
                     query.getHow(),
-                    query.isInvert()
+                    query.isInvert(),
+                    query.isBuildComment()
             );
         } else {
             artifactSearch = null;
@@ -79,6 +80,9 @@ public class ProjectWrapper {
     public List<LinkableCandidate> createDetailsImpl() {
         if (project.isPresent()) {
             List<LinkableCandidate> result = new ArrayList<>();
+            if (query!=null && query.isJobComment() && project.get().getDescription().length() > 0) {
+                result.add(new LinkableCandidate(project.get().getDescription()));
+            }
             if (projectInfo) {
                 //-P
                 int bc = project.get().getNextBuildNumber() - 1;
@@ -154,29 +158,26 @@ public class ProjectWrapper {
                     if (q instanceof AbstractBuild) {
                         AbstractBuild b = (AbstractBuild) q;
                         if (i1 > 0) {
-                            if (query != null && query.isSearchByNvr() >= 0) {
+                            if (query != null && (query.isSearchByNvr() >= 0 || query.isSearchByBuildComment()>=0)) {
                                 for (String candidate : query.getWithoutArgumentsSplit()) {
-                                    if (query.isSearchByNvr() == 1 && matched != null && matched.contains(candidate)) {
-                                        continue;
+                                    boolean hit = false;
+                                    if (!(query.isSearchByNvr() == 1 && matched != null && matched.contains(candidate))) {
+                                        String displayName = b.getDisplayName();
+                                        if (displayName == null) {
+                                            displayName = "";
+                                        }
+                                        hit = tryMatch(buildsList, b, candidate, displayName);
                                     }
-                                    String displayName = b.getDisplayName();
-                                    boolean matches = NamableWithClass.matchSingle(displayName, candidate, query.getHow());
-                                    if (!query.isInvert()) {
-                                        if (matches) {
-                                            BuildDetails bb = buildToString(b);
-                                            setDateTime(bb);
-                                            if (isBuildTimeValid(b)) {
-                                                buildsList.add(bb);
-                                            }
+                                    if (hit) {
+                                        //we hsve to break, otherwise result can be added twice
+                                        break;
+                                    }
+                                    if (!(query.isSearchByBuildComment() == 1 && matched != null && matched.contains(candidate))) {
+                                        String description = b.getDescription();
+                                        if (description == null) {
+                                            description = "";
                                         }
-                                    } else {
-                                        if (!matches) {
-                                            BuildDetails bb = buildToString(b);
-                                            setDateTime(bb);
-                                            if (isBuildTimeValid(b)) {
-                                                buildsList.add(bb);
-                                            }
-                                        }
+                                        hit = tryMatch(buildsList, b, candidate, description);
                                     }
                                 }
                             } else {
@@ -223,6 +224,31 @@ public class ProjectWrapper {
         }
     }
 
+    private boolean tryMatch(List<BuildDetails> buildsList, AbstractBuild b, String candidate, String displayName) {
+        boolean hit = false;
+        boolean matches = NamableWithClass.matchSingle(displayName, candidate, query.getHow());
+        if (!query.isInvert()) {
+            if (matches) {
+                BuildDetails bb = buildToString(b);
+                hit = true;
+                setDateTime(bb);
+                if (isBuildTimeValid(b)) {
+                    buildsList.add(bb);
+                }
+            }
+        } else {
+            if (!matches) {
+                BuildDetails bb = buildToString(b);
+                hit = true;
+                setDateTime(bb);
+                if (isBuildTimeValid(b)) {
+                    buildsList.add(bb);
+                }
+            }
+        }
+        return hit;
+    }
+
     private boolean isBuildTimeValid(AbstractBuild b) {
         return b.getTime().getTime() >= lowerTimeLimit.getTime();
     }
@@ -248,7 +274,7 @@ public class ProjectWrapper {
         if (query.isSearchByArtifacts() > 0) {
             archives = Math.max(0, query.getMaxArtifacts());
         }
-        return lastBuild != null ? new BuildDetails(s, lastBuild, archives) : new BuildDetails(s, null, null, null, null, new Date(0), new ArrayList<>(0));
+        return lastBuild != null ? new BuildDetails(s, lastBuild, archives) : new BuildDetails(s, null, null, null, null, null, new Date(0), new ArrayList<>(0));
     }
 
     private BuildDetails buildToString(Run ab) {
@@ -260,14 +286,21 @@ public class ProjectWrapper {
             if (query == null) {
                 return true;
             } else {
-                if (query.isSearchByNvr()>0) {
+                if (query.isSearchByNvr() > 0) {
                     if (query.isNvrFinalFilter() && matchedBuildsCount <= 0) {
                         return false;
                     } else {
                         return true;
                     }
                 }
-                if (query.isSearchByArtifacts()>0) {
+                if (query.isSearchByBuildComment() > 0) {
+                    if (query.isBuildCommentFinalFilter() && matchedBuildsCount <= 0) {
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
+                if (query.isSearchByArtifacts() > 0) {
                     if (query.isArtifactFinalFilter() && matchedArtifactsCount <= 0) {
                         return false;
                     } else {

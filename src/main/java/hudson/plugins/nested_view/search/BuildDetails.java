@@ -15,6 +15,7 @@ public class BuildDetails {
 
     private final String id;
     private final String displayName;
+    private final String description;
     private final String result;
     private final String timeStampString;
     private final String prefix;
@@ -22,18 +23,20 @@ public class BuildDetails {
     private final List<Run.Artifact> artifacts;
 
     public BuildDetails(String prefix, Run run, int archives) {
-        this(prefix, run.getId(), run.getDisplayName(), run.getResult(), run.getTimestampString(), run.getTime(), archives>0?run.getArtifactsUpTo(archives):new ArrayList<Run.Artifact>(0));
+        this(prefix, run.getId(), run.getDisplayName(), run.getDescription(), run.getResult(), run.getTimestampString(), run.getTime(),
+                archives > 0 ? run.getArtifactsUpTo(archives) : new ArrayList<Run.Artifact>(0));
     }
 
     @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "date is not cared")
-    public BuildDetails(String prefix, String id, String displayName, Result result, String timeStampString, Date dateTime, List<Run.Artifact> list) {
+    public BuildDetails(String prefix, String id, String displayName, String description, Result result, String timeStampString, Date dateTime, List<Run.Artifact> list) {
         this.prefix = prefix;
         this.id = id;
         this.displayName = displayName;
+        this.description = description;
         this.result = result == null ? "RUNNING" : result.toString();
         this.timeStampString = timeStampString;
         this.dateTime = dateTime;
-        this.artifacts = (list==null?new ArrayList<>():list);
+        this.artifacts = (list == null ? new ArrayList<>() : list);
     }
 
     public List<String> getArtifacts() {
@@ -63,11 +66,14 @@ public class BuildDetails {
                 post = id + "/" + displayName;
             }
             post = post + "/" + result + "/" + timeStampString + " ago";
-            if (artifacts.size()>0) {
-                post += " ("+artifacts.size()+" artifacts)";
+            if (searchArtifactsOptions != null && searchArtifactsOptions.description && description != null) {
+                post += " [" + description + "]";
+            }
+            if (artifacts.size() > 0) {
+                post += " (" + artifacts.size() + " artifacts)";
             }
             List<LinkableCandidate> sublinks = new ArrayList<>(artifacts.size());
-            if(searchArtifactsOptions != null) {
+            if (searchArtifactsOptions != null) {
                 for (Run.Artifact artifact : artifacts) {
                     for (String candidate : searchArtifactsOptions.query) {
                         if (searchArtifactsOptions.algorithm == 1 && searchArtifactsOptions.matched != null && searchArtifactsOptions.matched.contains(candidate)) {
@@ -76,8 +82,9 @@ public class BuildDetails {
                         boolean matches = NamableWithClass.matchSingle(artifact.relativePath, candidate, searchArtifactsOptions.how);
                         if (!searchArtifactsOptions.invert) {
                             if (matches) {
-                                sublinks.add(new LinkableCandidate("", artifact.relativePath, "", getJenkinsUrl() + "/job/" + projectName + "/" + id + "/artifact/" + artifact.relativePath, new ArrayList<>(0)));
-                                if (listener!=null){
+                                sublinks.add(new LinkableCandidate("", artifact.relativePath, "", getJenkinsUrl() + "/job/" + projectName + "/" + id + "/artifact/" + artifact.relativePath,
+                                        new ArrayList<>(0)));
+                                if (listener != null) {
                                     listener.addArtifactCouont();
                                 }
                                 break;
@@ -112,13 +119,15 @@ public class BuildDetails {
         private final Collection<String> matched;
         private final String how;
         private final boolean invert;
+        private final boolean description;
 
-        public SearchArtifactsOptions(String[] query, int algorithm,  Collection<String> matched, String how, boolean invert) {
+        public SearchArtifactsOptions(String[] query, int algorithm, Collection<String> matched, String how, boolean invert, boolean description) {
             this.query = query;
             this.algorithm = algorithm;
             this.matched = matched;
             this.how = how;
             this.invert = invert;
+            this.description = description;
         }
     }
 }

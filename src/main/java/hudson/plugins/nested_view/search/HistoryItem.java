@@ -125,7 +125,7 @@ public class HistoryItem {
     }
 
     public String getUrl() {
-        return BuildDetails.getJenkinsUrl() + "/search/?q=" + getQuery();
+        return BuildDetails.getJenkinsUrl() + "/search/?q=" + getQuery().replaceAll("#","%23");
     }
 
     public int getSize() {

@@ -1,5 +1,6 @@
 package hudson.plugins.nested_view.search;
 
+import hudson.model.View;
 import hudson.plugins.nested_view.NestedViewsSearch;
 import hudson.plugins.nested_view.NestedViewsSearchFactory;
 
@@ -18,11 +19,16 @@ public class Query {
 
     private boolean multiline;
     private int searchByNvr = -1;
+    private boolean searchByJobComment = false;
+    private int searchByBuildComment = -1;
     private int searchByArtifacts = -1;
     private int maxArtifacts = -1;
     private boolean nvrFinalFilter;
     private boolean artifactFinalFilter;
+    private boolean buildCommentFinalFilter;
     private boolean projectInfo;
+    private boolean jobComment;
+    private boolean buildComment;
     private int stats = -1;
     private boolean statsTable = false;
     private int builds = -1;
@@ -96,6 +102,41 @@ public class Query {
                         searchByNvr = getNumber(query, "D", 1);
                     } else {
                         searchByNvr = getNumber(query, "d", 1);
+                    }
+                }
+                bool = "o";
+                if (builds <= 0) { //maybe it was already set
+                    builds = 10;
+                }
+            }
+            if (query.contains("#")) {
+                jobComment = true;
+                if (search) {
+                    int hashes = 0;
+                    for (int i = 0; i < query.length(); i++) {
+                        if (query.charAt(i) == '#') {
+                            hashes++;
+                        }
+                    }
+                    if (hashes > 1) {
+                        searchByJobComment = true;
+                    }
+                }
+            }
+            if (query.contains("/")) {
+                buildComment = true;
+                if (search) {
+                    int slashes = 0;
+                    for (int i = 0; i < query.length(); i++) {
+                        if (query.charAt(i) == '/') {
+                            slashes++;
+                        }
+                    }
+                    if (slashes > 1) {
+                        searchByBuildComment = getNumber(query, "/", 1);
+                    }
+                    if (slashes > 2) {
+                        buildCommentFinalFilter = true;
                     }
                 }
                 bool = "o";
@@ -233,7 +274,7 @@ public class Query {
     }
 
     private long getLongNumber(String query, String switcher, long n) {
-        String l = query.replaceAll(".*" + switcher, "");
+        String l = query.replaceAll(".*" + switcher + "+", "");
         l = l.replaceAll("[^0-9].*", "");
         try {
             n = Long.parseLong(l);
@@ -250,6 +291,19 @@ public class Query {
     public boolean isProjectInfo() {
         return projectInfo;
     }
+
+    public boolean isJobComment() {
+        return jobComment;
+    }
+
+    public boolean isSearchByJobComment() {
+        return searchByJobComment;
+    }
+
+    public boolean isBuildComment() {
+        return buildComment;
+    }
+
 
     public int getStats() {
         return stats;
@@ -275,6 +329,10 @@ public class Query {
         return searchByNvr;
     }
 
+    public int isSearchByBuildComment() {
+        return searchByBuildComment;
+    }
+
     public int isSearchByArtifacts() {
         return searchByArtifacts;
     }
@@ -289,6 +347,10 @@ public class Query {
 
     public boolean isArtifactFinalFilter() {
         return artifactFinalFilter;
+    }
+
+    public boolean isBuildCommentFinalFilter() {
+        return buildCommentFinalFilter;
     }
 
     public boolean isInvert() {
@@ -324,5 +386,13 @@ public class Query {
                 && loriginal.length() >= MIN_LENGTH
                 && !lwithout.equals(".*")
                 && lwithout.length() >= MIN_LENGTH;
+    }
+
+    public String getQuery() {
+        if (original.startsWith("-") && original.contains(":")) {
+            return original.replaceFirst("-", "").replaceAll(":.*", "");
+        } else {
+            return original;
+        }
     }
 }

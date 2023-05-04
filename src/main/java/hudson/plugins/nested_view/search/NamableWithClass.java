@@ -5,23 +5,28 @@ import hudson.model.View;
 import hudson.plugins.nested_view.NestedView;
 import jenkins.model.Jenkins;
 
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
 public class NamableWithClass {
     private final String name;
     private final String fullPath;
+    private final String description;
     private Object item;
 
-    public NamableWithClass(Object item, String name, String fullPath) {
+    public NamableWithClass(Object item, String name, String fullPath, String description) {
         this.item = item;
         this.name = name;
         this.fullPath = fullPath;
+        this.description = description;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getDescription() {
+        return description==null?"":description;
     }
 
     public String getFullPath() {
@@ -64,6 +69,9 @@ public class NamableWithClass {
         String nameOrPath = getFullPath();
         if (query.getPart().equals("p")) {
             nameOrPath = getName();
+        }
+        if (query.getQuery().contains("##")) {
+            nameOrPath = getDescription();
         }
         boolean clazzPass = false;
         if (query.getWhere().contains("j") && (item instanceof AbstractProject)) {
