@@ -23,15 +23,15 @@
  */
 package hudson.plugins.nested_view;
 
-import com.gargoylesoftware.htmlunit.ElementNotFoundException;
-import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
-import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.WebRequest;
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlOption;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.xml.XmlPage;
+import org.htmlunit.ElementNotFoundException;
+import org.htmlunit.FailingHttpStatusCodeException;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebRequest;
+import org.htmlunit.html.HtmlAnchor;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlOption;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.xml.XmlPage;
 
 import hudson.model.AllView;
 import hudson.model.Cause.UserCause;
@@ -78,23 +78,23 @@ public class NestedViewTest {
 
         // Create a new nested view
         HtmlForm form = wc.goTo("newView").getFormByName("createItem");
-        form.getInputByName("name").setValueAttribute("test-nest");
+        form.getInputByName("name").setValue("test-nest");
         form.getInputByValue("hudson.plugins.nested_view.NestedView").setChecked(true);
         rule.submit(form);
         // Add some subviews
         form = wc.goTo("view/test-nest/newView").getFormByName("createItem");
-        form.getInputByName("name").setValueAttribute("subview");
+        form.getInputByName("name").setValue("subview");
         form.getInputByValue("hudson.model.ListView").setChecked(true);
         form = rule.submit(form).getFormByName("viewConfig");
         form.getInputByName("useincluderegex").setChecked(true);
-        form.getInputByName("includeRegex").setValueAttribute("E.*");
+        form.getInputByName("includeRegex").setValue("E.*");
         rule.submit(form);
         form = wc.goTo("view/test-nest/newView").getFormByName("createItem");
-        form.getInputByName("name").setValueAttribute("subnest");
+        form.getInputByName("name").setValue("subnest");
         form.getInputByValue("hudson.plugins.nested_view.NestedView").setChecked(true);
         rule.submit(form);
         form = wc.goTo("view/test-nest/newView").getFormByName("createItem");
-        form.getInputByName("name").setValueAttribute("suball");
+        form.getInputByName("name").setValue("suball");
         form.getInputByValue("hudson.model.AllView").setChecked(true);
         rule.submit(form);
         // Verify links to subviews
@@ -105,9 +105,9 @@ public class NestedViewTest {
         // Now set a default subview
         form = wc.goTo("view/test-nest/configure").getFormByName("viewConfig");
         List<HtmlOption> options = form.getSelectByName("defaultView").getOptions();
-        assertEquals("", options.get(0).getValueAttribute());
-        assertEquals("suball", options.get(1).getValueAttribute());
-        assertEquals("subview", options.get(2).getValueAttribute());
+        assertEquals("", options.get(0).getValue());
+        assertEquals("suball", options.get(1).getValue());
+        assertEquals("subview", options.get(2).getValue());
         // "None" and 2 views in alphabetical order; subnest should not be in list
         assertEquals(3, options.size());
         options.get(1).setSelected(true);
@@ -280,16 +280,16 @@ public class NestedViewTest {
         rule.createFreeStyleProject("test-job");
         // Create a new nested view
         HtmlForm form = wc.goTo("newView").getFormByName("createItem");
-        form.getInputByName("name").setValueAttribute("test-nest");
+        form.getInputByName("name").setValue("test-nest");
         form.getInputByValue("hudson.plugins.nested_view.NestedView").setChecked(true);
         rule.submit(form);
         // Add some subviews
         form = wc.goTo("view/test-nest/newView").getFormByName("createItem");
-        form.getInputByName("name").setValueAttribute("subview");
+        form.getInputByName("name").setValue("subview");
         form.getInputByValue("hudson.model.ListView").setChecked(true);
         form = rule.submit(form).getFormByName("viewConfig");
         form.getInputByName("useincluderegex").setChecked(true);
-        form.getInputByName("includeRegex").setValueAttribute(".*job");
+        form.getInputByName("includeRegex").setValue(".*job");
         rule.submit(form);
         return wc;
     }
