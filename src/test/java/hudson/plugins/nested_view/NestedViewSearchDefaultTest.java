@@ -25,7 +25,7 @@ package hudson.plugins.nested_view;
 
 import static org.junit.Assert.assertNotNull;
 
-import com.gargoylesoftware.htmlunit.ElementNotFoundException;
+import org.htmlunit.ElementNotFoundException;
 
 import org.junit.Rule;
 import org.junit.Test;
