@@ -7,7 +7,7 @@
     <relativePath />
   </parent>
   <properties>
-    <jenkins.version>2.341</jenkins.version>
+    <jenkins.version>2.361</jenkins.version>
   </properties>
 
   <artifactId>nested-view</artifactId>
