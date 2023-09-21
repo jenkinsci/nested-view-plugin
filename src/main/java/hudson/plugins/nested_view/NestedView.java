@@ -26,7 +26,6 @@ package hudson.plugins.nested_view;
 
 import com.thoughtworks.xstream.converters.ConversionException;
 import com.thoughtworks.xstream.io.StreamException;
-import com.thoughtworks.xstream.io.xml.XppDriver;
 import hudson.util.IOException2;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -41,7 +40,6 @@ import java.io.StringWriter;
 import hudson.util.XStream2;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.transform.Source;
-import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
@@ -522,7 +520,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
             XStream2 xstream = new XStream2();
             //Owner of this view does not have to be changed
             xstream.registerLocalConverter(View.class, "owner", new OwnerConvertor());
-            xstream.unmarshal(new XppDriver().createReader(in), this);
+            xstream.unmarshal(XStream2.getDefaultDriver().createReader(in), this);
         } catch (StreamException e) {
             throw new IOException2("Unable to read",e);
         } catch(ConversionException e) {
@@ -619,7 +617,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
 
         @Override
         public void marshal(Object source, HierarchicalStreamWriter writer, MarshallingContext context) {
-            XStream stream = new XStream();
+            XStream2 stream = new XStream2();
             if(source.equals(owner)){
                 writer.addAttribute("ignore", "true");
                 return;
@@ -633,7 +631,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
             if(reader.getAttribute("ignore")!=null && reader.getAttribute("ignore").equals("true")){
                 return owner;
             }
-            XStream stream = new XStream();
+            XStream2 stream = new XStream2();
             Object o = stream.unmarshal(reader);
             return o;
         }
