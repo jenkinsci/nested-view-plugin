@@ -17,7 +17,7 @@
   <packaging>hpi</packaging>
   <name>Nested View Plugin</name>
   <version>${revision}${changelist}</version>
-  <url>https://wiki.jenkins.io/display/JENKINS/Nested+View+Plugin</url>
+  <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
 
   <developers>
     <developer>
