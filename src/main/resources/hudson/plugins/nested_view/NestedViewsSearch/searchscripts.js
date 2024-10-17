@@ -1,16 +1,16 @@
         // <![CDATA[
 
-function nvwp_showHide_button_2_1_show() {
+function nvwp_showHide_button_2_1_show(event) {
   document.getElementById('button_expand_2_1').style.display = 'none';
   document.getElementById('button_collapse_2_1').style.display = 'inline';
   document.getElementById('details_2_1').style.display = 'block';
-  return false;
+  event.preventDefault();
 }
-function nvwp_showHide_button_2_1_hide() {
+function nvwp_showHide_button_2_1_hide(event) {
   document.getElementById('button_collapse_2_1').style.display = 'none';
   document.getElementById('details_2_1').style.display = 'none';
   document.getElementById('button_expand_2_1').style.display = 'inline';
-  return false;
+  event.preventDefault();
 }
 
 const exEl = document.getElementById("button_expand_2_1");
