@@ -1,16 +1,14 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
-    <st:adjunct includes="hudson.plugins.nested_view.NestedViewsSearch.searchscripts"/>
     <j:set var="q" value="${request.getParameter('q')}"/>
     <j:new var="h" className="hudson.Functions"/>
     <!-- needed for printing title. -->
     <l:layout title="${%Search for} '${q}'">
         <l:side-panel>
             <h2><l:icon class="icon-help icon-sm" /> Search help</h2>
-            <a onclick="nvwp_showHide_button_2_1_show()"
-               style="font-size: smaller; display: inline" href="#" id="button_expand_2_1">Search History (expand)</a>
-            <a onclick="nvwp_showHide_button_2_1_hide()"
-               style="font-size: smaller; display: none" href="#" id="button_collapse_2_1">Search History (collapse)</a>
+            <a style="font-size: smaller; display: inline" href="#" id="button_expand_2_1">Search History (expand)</a>
+            <a style="font-size: smaller; display: none" href="#" id="button_collapse_2_1">Search History (collapse)</a>
+            <st:adjunct includes="hudson.plugins.nested_view.NestedViewsSearch.searchscripts"/>
             <div style="display: none" id="details_2_1">
                 <ol>
                 <j:forEach var="hist" items="${it.getHistory()}">
