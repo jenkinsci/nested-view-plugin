@@ -15,11 +15,11 @@ import hudson.search.SuggestedItem;
 import jenkins.model.Jenkins;
 
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletException;
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -75,7 +75,7 @@ public class NestedViewsSearch extends Search {
     }
 
     @Override
-    public void doIndex(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+    public void doIndex(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException {
         String query = req.getParameter("q");
         hits = new ArrayList<>();
         if (query != null) {
@@ -129,7 +129,7 @@ public class NestedViewsSearch extends Search {
     }
 
     @Override
-    public SearchResult getSuggestions(final StaplerRequest req, @QueryParameter final String query) {
+    public SearchResult getSuggestions(final StaplerRequest2 req, @QueryParameter final String query) {
         SearchResult suggestedItems = super.getSuggestions(req, query);
         this.query = new Query(false, query);
         final Set<String> matched = new HashSet<>(); //unusuded for suggestions
