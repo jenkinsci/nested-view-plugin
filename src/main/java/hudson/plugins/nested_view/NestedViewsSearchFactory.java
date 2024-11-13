@@ -5,10 +5,10 @@ import hudson.Extension;
 import hudson.search.Search;
 import hudson.search.SearchFactory;
 import hudson.search.SearchableModelObject;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 
 
@@ -36,7 +36,7 @@ public class NestedViewsSearchFactory extends SearchFactory {
             if (isTmpSkip()) {
                 return new Search(){
                     @Override
-                    public void doIndex(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+                    public void doIndex(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException {
                         //we have to reset it only in search, not during suggestions
                         super.doIndex(req, rsp);
                         resetTmpSkip();

@@ -60,7 +60,7 @@ import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.Exported;
 import hudson.security.Permission;
 
-import javax.servlet.ServletException;
+import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -126,12 +126,12 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     }
 
     @Override
-    public ContextMenu doContextMenu(StaplerRequest request, StaplerResponse response) throws IOException, JellyException {
+    public ContextMenu doContextMenu(StaplerRequest2 request, StaplerResponse2 response) throws IOException, JellyException {
         return new ContextMenu().from(this, request, response);
     }
 
     @Override
-    public ContextMenu doChildrenContextMenu(StaplerRequest request, StaplerResponse response) throws Exception {
+    public ContextMenu doChildrenContextMenu(StaplerRequest2 request, StaplerResponse2 response) throws Exception {
         ContextMenu menu = new ContextMenu();
         for (View view : getViews()) {
             menu.add(new MenuItem().withContextRelativeUrl(view.getUrl()).withDisplayName(view.getDisplayName()));
@@ -160,7 +160,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     }
 
     @Override
-    public Item doCreateItem(StaplerRequest req, StaplerResponse rsp)
+    public Item doCreateItem(StaplerRequest2 req, StaplerResponse2 rsp)
             throws IOException, ServletException {
         ItemGroup itemGroup = getItemGroup();
         if (itemGroup instanceof ModifiableItemGroup) {
@@ -212,7 +212,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
             v.onJobRenamed(item, oldName, newName);
     }
 
-    protected synchronized void submit(StaplerRequest req) throws IOException, ServletException, FormException {
+    protected synchronized void submit(StaplerRequest2 req) throws IOException, ServletException, FormException {
         defaultView = Util.fixEmpty(req.getParameter("defaultView"));
         if (columns == null) {
             columns = new NestedViewColumns();
@@ -275,7 +275,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         }
     }
 
-    public void doCreateView(StaplerRequest req, StaplerResponse rsp)
+    public void doCreateView(StaplerRequest2 req, StaplerResponse2 rsp)
             throws IOException, ServletException, FormException {
         checkPermission(View.CREATE);
         addView(View.create(req, rsp, this));
@@ -470,11 +470,11 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     
     @Override
     @WebMethod(name = "config.xml")
-    public HttpResponse doConfigDotXml(StaplerRequest req) throws IOException {
+    public HttpResponse doConfigDotXml(StaplerRequest2 req) throws IOException {
        if (req.getMethod().equals("GET")) {
             checkPermission(READ);
             return new HttpResponse() {
-                public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node) throws IOException, ServletException {
+                public void generateResponse(StaplerRequest2 req, StaplerResponse2 rsp, Object node) throws IOException, ServletException {
                     
                     rsp.setContentType("application/xml");
                     XStream2 xStream2 = new XStream2();
@@ -596,12 +596,12 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     public Object getTarget() {
         // Proxy to handle redirect when a default subview is configured
         return (getDefaultView() != null &&
-                "".equals(Stapler.getCurrentRequest().getRestOfPath()))
+                "".equals(Stapler.getCurrentRequest2().getRestOfPath()))
                 ? new DefaultViewProxy() : this;
     }
 
     public class DefaultViewProxy {
-        public void doIndex(StaplerRequest req, StaplerResponse rsp)
+        public void doIndex(StaplerRequest2 req, StaplerResponse2 rsp)
                 throws IOException, ServletException {
             if (getDefaultView() != null)
                 rsp.sendRedirect2("view/" + defaultView);

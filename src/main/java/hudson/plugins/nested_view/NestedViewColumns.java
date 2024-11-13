@@ -10,7 +10,7 @@ import hudson.views.StatusColumn;
 import hudson.views.WeatherColumn;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.List;
 public class NestedViewColumns {
     private DescribableList<ListViewColumn, Descriptor<ListViewColumn>> columns;
 
-    public void updateFromForm(StaplerRequest req, JSONObject formData, String key) throws IOException, Descriptor.FormException {
+    public void updateFromForm(StaplerRequest2 req, JSONObject formData, String key) throws IOException, Descriptor.FormException {
         columns.rebuildHetero(req, formData, getPossibleColumns(), key);
     }
 

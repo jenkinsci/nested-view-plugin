@@ -44,6 +44,7 @@ import hudson.security.csrf.CrumbIssuer;
 
 import static hudson.util.FormValidation.Kind.*;
 
+import jakarta.servlet.ServletRequest;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
@@ -176,7 +177,7 @@ public class NestedViewTest {
         // First try creating a clone of this view (Jenkins.doCreateView → View.create → View.createViewFromXML):
         // TODO wc.createCrumbedUrl does not work when you are specifying your own query parameters
         CrumbIssuer issuer = rule.jenkins.getCrumbIssuer();
-        WebRequest req = new WebRequest(new URL(rule.getURL(), "/createView?name=clone&" + issuer.getDescriptor().getCrumbRequestField() + "=" + issuer.getCrumb(null)), HttpMethod.POST);
+        WebRequest req = new WebRequest(new URL(rule.getURL(), "/createView?name=clone&" + issuer.getDescriptor().getCrumbRequestField() + "=" + issuer.getCrumb((ServletRequest) null)), HttpMethod.POST);
         req.setAdditionalHeader("Content-Type", "application/xml");
         req.setRequestBody(xml);
         wc.getPage(req);
