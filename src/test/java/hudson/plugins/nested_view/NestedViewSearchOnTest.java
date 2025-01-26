@@ -47,10 +47,10 @@ public class NestedViewSearchOnTest {
         WebClient wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
         // Perform some searches with extended search on. Results should contain urls with prefix
         NestedViewGlobalConfig.getInstance().setNestedViewSearch(true);
-        assertNotNull(NestedViewTest.searchAndCheck1(wc, rule));
-        assertNotNull(NestedViewTest.searchAndCheck2(wc, rule));
-        assertNotNull(NestedViewTest.searchAndCheck3(wc, rule));
-        assertNotNull(NestedViewTest.searchAndCheck4(wc, rule));
+        NestedViewTest.searchAndCheck1(wc, rule);
+        NestedViewTest.searchAndCheck2(wc, rule);
+        NestedViewTest.searchAndCheck3(wc, rule);
+        NestedViewTest.searchAndCheck4(wc, rule);
         HtmlPage page = wc.search("-mPLBSD2: .*.*");
         System.out.println(page.toString());
         List<HtmlAnchor> anchors = page.getAnchors();

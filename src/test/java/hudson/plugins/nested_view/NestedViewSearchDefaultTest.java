@@ -43,10 +43,10 @@ public class NestedViewSearchDefaultTest {
     public void testSearchWithPrefixDefault() throws Exception {
         WebClient wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
         // Perform some searches. ensure extended search is on
-        assertNotNull(NestedViewTest.searchAndCheck1(wc, rule));
-        assertNotNull(NestedViewTest.searchAndCheck2(wc, rule));
-        assertNotNull(NestedViewTest.searchAndCheck3(wc, rule));
-        assertNotNull(NestedViewTest.searchAndCheck4(wc, rule));
+        NestedViewTest.searchAndCheck1(wc, rule);
+        NestedViewTest.searchAndCheck2(wc, rule);
+        NestedViewTest.searchAndCheck3(wc, rule);
+        NestedViewTest.searchAndCheck4(wc, rule);
     }
 
 }

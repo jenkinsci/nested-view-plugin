@@ -294,23 +294,23 @@ public class NestedViewTest {
     }
 
 
-    static Boolean searchAndCheck4(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
+    static void searchAndCheck4(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
         HtmlPage page = wc.search("-f: test-nest/subview");
-        return page.getUrl().toString().equals(rule.getURL().toString() + "view/test-nest/view/subview");
+        assertEquals(page.getUrl().toString(), rule.getURL().toString() + "view/test-nest/view/subview/");
     }
 
-    static Boolean searchAndCheck3(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
+    static void searchAndCheck3(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
         HtmlPage page = wc.search("-p: subview");
-        return page.getUrl().toString().equals(rule.getURL().toString() + "view/test-nest/view/subview");
+        assertEquals(page.getUrl().toString(), rule.getURL().toString() + "view/test-nest/view/subview/");
     }
 
-    static Boolean searchAndCheck2(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
+    static void searchAndCheck2(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
         HtmlPage page = wc.search("-p: test-nest");
-        return page.getUrl().toString().equals(rule.getURL().toString() + "view/test-nest/");
+        assertEquals(page.getUrl().toString(), rule.getURL().toString() + "view/test-nest/");
     }
 
-    static Boolean searchAndCheck1(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
+    static void searchAndCheck1(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
         HtmlPage page = wc.search("test-job");
-        return page.getUrl().toString().equals(rule.getURL().toString() + "job/test-job/");
+        assertEquals(page.getUrl().toString(), rule.getURL().toString() + "job/test-job/");
     }
 }
