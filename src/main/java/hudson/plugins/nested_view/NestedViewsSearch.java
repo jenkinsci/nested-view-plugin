@@ -136,7 +136,7 @@ public class NestedViewsSearch extends Search {
         if (this.query.isNonTrivial(true)) {
             for (NamableWithClass item : allCache) {
                 if (item.matches(this.query, matched)) {
-                    suggestedItems.add(new SuggestedItem(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl(), item.getProject(), null, null)));
+                    suggestedItems.add(new SuggestedItem(new NestedViewsSearchResult(item.getUsefulName(), item.getUrl().replace(Jenkins.get().getRootUrl(), ""), item.getProject(), null, null)));
                 }
             }
         }
