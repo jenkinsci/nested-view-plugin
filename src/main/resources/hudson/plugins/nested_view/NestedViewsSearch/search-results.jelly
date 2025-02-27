@@ -1,6 +1,6 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
-    <j:set var="q" value="${request.getParameter('q')}"/>
+    <j:set var="q" value="${request2.getParameter('q')}"/>
     <j:new var="h" className="hudson.Functions"/>
     <!-- needed for printing title. -->
     <l:layout title="${%Search for} '${q}'">
