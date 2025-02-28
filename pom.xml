@@ -3,14 +3,14 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.2</version>
+    <version>5.5</version>
     <relativePath />
   </parent>
   <properties>
     <revision>1.37</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.baseline>2.479</jenkins.baseline>
-    <jenkins.version>${jenkins.baseline}.1</jenkins.version>
+    <jenkins.version>2.494</jenkins.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
   </properties>
 
