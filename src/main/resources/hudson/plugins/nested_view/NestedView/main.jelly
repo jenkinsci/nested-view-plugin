@@ -23,7 +23,7 @@ THE SOFTWARE.
 -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"
-         xmlns:t="/lib/hudson">
+         xmlns:t="/lib/hudson" xmlns:l="/lib/layout">
   <t:setIconSize/>
   <div class="dashboard">
     <j:set var="views" value="${it.owner.views}"/>
@@ -45,22 +45,26 @@ THE SOFTWARE.
       <j:otherwise>
         <!-- If a default subview is configured, NestedView.DefaultViewProxy will redirect..
              otherwise show a list of the subviews (in a table, not tabs) -->
-        <table id="projectstatus" class="sortable pane bigtable"
-               style="margin-top:0; border-top:none">
-          <tr style="border-top:0">
-            <th width="1"></th>
+        <table id="projectstatus" class="jenkins-table ${iconSize == '16x16' ? 'jenkins-table--small' : iconSize == '24x24' ? 'jenkins-table--medium' : ''} sortable">
+          <thead>
+          <tr>
+            <th class="jenkins-table__cell--tight jenkins-table__icon"></th>
             <j:if test="${optionalColumns.showStatusColumn}">
-              <th width="1" tooltip="${%StatusTooltip}"><j:out value="${h.nbspIndent(iconSize)}"/>S</th>
+              <th tooltip="${%StatusTooltip}" class="jenkins-table__cell--tight jenkins-table__icon">S</th>
             </j:if>
             <j:if test="${optionalColumns.showWeatherColumn}">
-              <th width="1" tooltip="${%WeatherTooltip}"><j:out value="${h.nbspIndent(iconSize)}"/>W</th>
+              <th tooltip="${%WeatherTooltip}" class="jenkins-table__cell--tight jenkins-table__icon">W</th>
             </j:if>
-            <th width="*">${%View}</th>
+            <th>${%View}</th>
           </tr>
+          </thead>
+          <tbody>
           <j:forEach var="v" items="${it.views}">
             <tr>
-              <td style="padding-left:5px;width:20px">
-                <img src="${imagesURL}/${iconSize}/${it.getImage(v)}" alt=""/>
+              <td class="jenkins-table__cell--tight jenkins-table__icon">
+                <div class="jenkins-table__cell__button-wrapper">
+                  <l:icon src="${it.getImage(v)}"/>
+                </div>
               </td>
               <j:if test="${optionalColumns.showStatusColumn}">
                 <j:set var="result" value="${it.getWorstResult(v)}"/>
@@ -75,6 +79,7 @@ THE SOFTWARE.
               </td>
             </tr>
           </j:forEach>
+          </tbody>
         </table>
         <t:rssBar-with-iconSize/>
       </j:otherwise>

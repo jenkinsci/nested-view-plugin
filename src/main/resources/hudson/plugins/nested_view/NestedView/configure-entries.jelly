@@ -26,17 +26,19 @@ THE SOFTWARE.
   <!--<f:checkbox default="false" checked="${it.showWeatherColumn}" title="Show Weather Column" name="showWeatherColumn"/>-->
   <j:if test="${!it.isDefault()}">
   <f:entry title="${%Default subview}" help="/plugin/nested-view/help-defaultView.html">
-    <select class="setting-input" name="defaultView">
-      <j:set var="defaultView" value="${it.defaultView}" />
-      <f:option value="" selected="${defaultView==null}">${%None}</f:option>
-      <j:forEach var="v" items="${it.views}">
-        <j:if test="${v.class.name!='hudson.plugins.nested_view.NestedView'}">
-          <f:option value="${v.viewName}" selected="${defaultView==v}">
-            ${v.viewName}
-          </f:option>
-        </j:if>
-      </j:forEach>
-    </select>
+    <div class="jenkins-select">
+      <select class="jenkins-select__input" name="defaultView">
+        <j:set var="defaultView" value="${it.defaultView}" />
+        <f:option value="" selected="${defaultView==null}">${%None}</f:option>
+        <j:forEach var="v" items="${it.views}">
+          <j:if test="${v.class.name!='hudson.plugins.nested_view.NestedView'}">
+            <f:option value="${v.viewName}" selected="${defaultView==v}">
+              ${v.viewName}
+            </f:option>
+          </j:if>
+        </j:forEach>
+      </select>
+    </div>
   </f:entry>
   </j:if>
   <f:section title="${%Columns}">
