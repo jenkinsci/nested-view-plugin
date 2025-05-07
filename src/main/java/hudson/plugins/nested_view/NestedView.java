@@ -1,19 +1,19 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2004-2011, Sun Microsystems, Inc., Kohsuke Kawaguchi, Alan Harder,
  * Manufacture Francaise des Pneumatiques Michelin, Romain Seguy
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +26,6 @@ package hudson.plugins.nested_view;
 
 import com.thoughtworks.xstream.converters.ConversionException;
 import com.thoughtworks.xstream.io.StreamException;
-import hudson.util.IOException2;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -109,7 +108,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     public List<TopLevelItem> getItems() {
         return Collections.emptyList();
     }
-    
+
 	@Override
 	public boolean hasPermission(Permission p) {
 		for (View view : views) {
@@ -170,20 +169,20 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     }
 
     /**
-     * Checks if a nested view with the given name exists and 
+     * Checks if a nested view with the given name exists and
      * make sure that the name is good as a view name.
      */
     public FormValidation doCheckViewName(@QueryParameter String value) {
         checkPermission(View.CREATE);
-        
+
         String name = fixEmpty(value);
-        if (name == null) 
+        if (name == null)
             return FormValidation.ok();
-        
+
         // already exists?
-        if (getView(name) != null) 
+        if (getView(name) != null)
             return FormValidation.error("View already exists");
-        
+
         // good view name?
         try {
             jenkins.model.Jenkins.checkGoodName(name);
@@ -467,7 +466,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
 
         return hrc;
     }
-    
+
     @Override
     @WebMethod(name = "config.xml")
     public HttpResponse doConfigDotXml(StaplerRequest2 req) throws IOException {
@@ -475,25 +474,25 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
             checkPermission(READ);
             return new HttpResponse() {
                 public void generateResponse(StaplerRequest2 req, StaplerResponse2 rsp, Object node) throws IOException, ServletException {
-                    
+
                     rsp.setContentType("application/xml");
                     XStream2 xStream2 = new XStream2();
                     //the owner of this view has to stay unchanged.
                     xStream2.registerLocalConverter(View.class, "owner", new OwnerConvertor());
-                    
+
                     xStream2.toXMLUTF8(NestedView.this,  rsp.getOutputStream());
                 }
             };
         }
         if (req.getMethod().equals("POST")) {
             updateByXml((Source)new StreamSource(req.getReader()));
-            
+
             return HttpResponses.ok();
         }
         return HttpResponses.error(400, "Unexpected request method " + req.getMethod());
-    
+
     }
-    
+
          /**
      * Updates View by its XML definition.
      */
@@ -513,7 +512,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
             t.transform(source, new StreamResult(out));
             out.close();
         } catch (TransformerException e) {
-            throw new IOException2("Failed to persist configuration.xml", e);
+            throw new IOException("Failed to persist configuration.xml", e);
         }
         InputStream in = new BufferedInputStream(new ByteArrayInputStream(out.toString().getBytes("UTF-8")));
         try {
@@ -522,11 +521,11 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
             xstream.registerLocalConverter(View.class, "owner", new OwnerConvertor());
             xstream.unmarshal(XStream2.getDefaultDriver().createReader(in), this);
         } catch (StreamException e) {
-            throw new IOException2("Unable to read",e);
+            throw new IOException("Unable to read",e);
         } catch(ConversionException e) {
-            throw new IOException2("Unable to read",e);
+            throw new IOException("Unable to read",e);
         } catch(Error e) {// mostly reflection errors
-            throw new IOException2("Unable to read",e);
+            throw new IOException("Unable to read",e);
         } finally {
             in.close();
         }
@@ -609,7 +608,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
                 req.getView(NestedView.this, "index.jelly").forward(req, rsp);
         }
     }
-    
+
     /**
      * Handle owner attribute
      */
@@ -623,7 +622,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
                 return;
             }
             stream.marshal(source, writer);
-           
+
         }
 
         @Override
@@ -640,7 +639,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         public boolean canConvert(Class type) {
             return ViewGroup.class.isAssignableFrom(type);
         }
-  
+
     }
 
     @Extension
