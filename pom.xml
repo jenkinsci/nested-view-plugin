@@ -16,7 +16,7 @@
   <artifactId>nested-view</artifactId>
   <packaging>hpi</packaging>
   <name>Nested View Plugin</name>
-  <version>${revision}${changelist}</version>
+  <version>${changelist}</version>
   <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
 
   <scm>
@@ -31,7 +31,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>4228.v0a_71308d905b_</version>
+        <version>4770.v9a_2b_7a_9d8b_7f</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
