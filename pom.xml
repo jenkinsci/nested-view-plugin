@@ -7,8 +7,7 @@
     <relativePath />
   </parent>
   <properties>
-    <revision>1.37</revision>
-    <changelist>-SNAPSHOT</changelist>
+    <changelist>999999-SNAPSHOT</changelist>
     <jenkins.baseline>2.479</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.1</jenkins.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
@@ -19,13 +18,6 @@
   <name>Nested View Plugin</name>
   <version>${revision}${changelist}</version>
   <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-
-  <developers>
-    <developer>
-      <id>mindless</id>
-      <name>Alan Harder</name>
-    </developer>
-  </developers>
 
   <scm>
     <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
