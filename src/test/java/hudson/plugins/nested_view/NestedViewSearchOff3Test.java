@@ -47,7 +47,7 @@ public class NestedViewSearchOff3Test {
         Exception ex = null;
         try {
             NestedViewTest.searchAndCheck3(wc, rule);
-        } catch (FailingHttpStatusCodeException exx) {
+        } catch (NullPointerException exx) {
             ex = exx;
         }
         assertNotNull(ex);

@@ -33,7 +33,7 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class NestedViewSearchOnOffTest {
 
@@ -47,27 +47,19 @@ public class NestedViewSearchOnOffTest {
         WebClient wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
         // Perform some searches with extended search on. Results should contain urls with prefix
         NestedViewGlobalConfig.getInstance().setNestedViewSearch(true);
-        assertNotNull(NestedViewTest.searchAndCheck1(wc, rule));
-        assertNotNull(NestedViewTest.searchAndCheck2(wc, rule));
-        assertNotNull(NestedViewTest.searchAndCheck3(wc, rule));
-        assertNotNull(NestedViewTest.searchAndCheck4(wc, rule));
+        NestedViewTest.searchAndCheck1(wc, rule);
+        NestedViewTest.searchAndCheck2(wc, rule);
+        NestedViewTest.searchAndCheck3(wc, rule);
+        NestedViewTest.searchAndCheck4(wc, rule);
         HtmlPage page = wc.search("-r: .*nest.*");
-        HtmlAnchor html = page.getAnchorByHref(rule.getURL().toString() + "view/test-nest");
-        assertNotNull(html);
+        assertEquals(page.getUrl().toString(), rule.getURL().toString() + "view/test-nest/");
+
         //second still ok
         page = wc.search("-rX: .*nest.*");
-        html = page.getAnchorByHref(rule.getURL().toString() + "view/test-nest");
-        assertNotNull(html);
+        assertEquals(page.getUrl().toString(), rule.getURL().toString() + "view/test-nest/");
+
         //X disabeld our search for next search
-        Exception ex = null;
-        html = null;
-        page = null;
-        try {
-            page = wc.search("-rX: .*nest.*");
-            html = page.getAnchorByHref(rule.getURL().toString() + "view/test-nest");
-        } catch (FailingHttpStatusCodeException exx) {
-            ex = exx;
-        }
-        assertNotNull(ex);
+        page = wc.search("-rX: .*nest.*");
+        assertNull(page);
     }
 }

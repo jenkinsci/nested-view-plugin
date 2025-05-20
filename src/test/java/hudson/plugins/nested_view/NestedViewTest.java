@@ -23,11 +23,9 @@
  */
 package hudson.plugins.nested_view;
 
-import org.htmlunit.ElementNotFoundException;
 import org.htmlunit.FailingHttpStatusCodeException;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.WebRequest;
-import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlOption;
 import org.htmlunit.html.HtmlPage;
@@ -296,23 +294,23 @@ public class NestedViewTest {
     }
 
 
-    static HtmlAnchor searchAndCheck4(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
+    static void searchAndCheck4(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
         HtmlPage page = wc.search("-f: test-nest/subview");
-        return page.getAnchorByHref(rule.getURL().toString() + "view/test-nest/view/subview");
+        assertEquals(page.getUrl().toString(), rule.getURL().toString() + "view/test-nest/view/subview/");
     }
 
-    static HtmlAnchor searchAndCheck3(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
+    static void searchAndCheck3(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
         HtmlPage page = wc.search("-p: subview");
-        return page.getAnchorByHref(rule.getURL().toString() + "view/test-nest/view/subview");
+        assertEquals(page.getUrl().toString(), rule.getURL().toString() + "view/test-nest/view/subview/");
     }
 
-    static HtmlAnchor searchAndCheck2(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
+    static void searchAndCheck2(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
         HtmlPage page = wc.search("-p: test-nest");
-        return page.getAnchorByHref(rule.getURL().toString() + "view/test-nest");
+        assertEquals(page.getUrl().toString(), rule.getURL().toString() + "view/test-nest/");
     }
 
-    static HtmlAnchor searchAndCheck1(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
+    static void searchAndCheck1(WebClient wc, JenkinsRule rule) throws IOException, SAXException {
         HtmlPage page = wc.search("test-job");
-        return page.getAnchorByHref(rule.getURL().toString() + "job/test-job");
+        assertEquals(page.getUrl().toString(), rule.getURL().toString() + "job/test-job/");
     }
 }
