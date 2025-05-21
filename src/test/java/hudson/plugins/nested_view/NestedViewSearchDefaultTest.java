@@ -23,30 +23,35 @@
  */
 package hudson.plugins.nested_view;
 
-import static org.junit.Assert.assertNotNull;
-
-import org.htmlunit.ElementNotFoundException;
-
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class NestedViewSearchDefaultTest {
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-    @Rule
-    public JenkinsRule rule = new JenkinsRule();
+@WithJenkins
+class NestedViewSearchDefaultTest {
+
+    private JenkinsRule rule;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        this.rule = rule;
+    }
 
     @Test
     @Issue("JENKINS-65924?")
-    public void testSearchWithPrefixDefault() throws Exception {
-        WebClient wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
-        // Perform some searches. ensure extended search is on
-        assertNotNull(NestedViewTest.searchAndCheck1(wc, rule));
-        assertNotNull(NestedViewTest.searchAndCheck2(wc, rule));
-        assertNotNull(NestedViewTest.searchAndCheck3(wc, rule));
-        assertNotNull(NestedViewTest.searchAndCheck4(wc, rule));
+    void testSearchWithPrefixDefault() throws Exception {
+        try (WebClient wc = NestedViewTest.createViewAndJobsForNestedViewSearch(rule)) {
+            // Perform some searches. Ensure extended search is on
+            assertNotNull(NestedViewTest.searchAndCheck1(wc, rule));
+            assertNotNull(NestedViewTest.searchAndCheck2(wc, rule));
+            assertNotNull(NestedViewTest.searchAndCheck3(wc, rule));
+            assertNotNull(NestedViewTest.searchAndCheck4(wc, rule));
+        }
     }
 
 }

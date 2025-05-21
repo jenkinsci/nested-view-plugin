@@ -23,28 +23,33 @@
  */
 package hudson.plugins.nested_view;
 
-import org.htmlunit.ElementNotFoundException;
 import org.htmlunit.FailingHttpStatusCodeException;
 import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlPage;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class NestedViewSearchOnOffTest {
+@WithJenkins
+class NestedViewSearchOnOffTest {
 
-    @Rule
-    public JenkinsRule rule = new JenkinsRule();
+    private JenkinsRule rule;
 
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        this.rule = rule;
+    }
 
     @Test
     @Issue("JENKINS-65924?")
-    public void testSearchWithPrefixOnOf() throws Exception {
-        WebClient wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
+    void testSearchWithPrefixOnOf() throws Exception {
+        WebClient wc = NestedViewTest.createViewAndJobsForNestedViewSearch(rule);
         // Perform some searches with extended search on. Results should contain urls with prefix
         NestedViewGlobalConfig.getInstance().setNestedViewSearch(true);
         assertNotNull(NestedViewTest.searchAndCheck1(wc, rule));
@@ -54,20 +59,12 @@ public class NestedViewSearchOnOffTest {
         HtmlPage page = wc.search("-r: .*nest.*");
         HtmlAnchor html = page.getAnchorByHref(rule.getURL().toString() + "view/test-nest");
         assertNotNull(html);
-        //second still ok
+        // second still ok
         page = wc.search("-rX: .*nest.*");
         html = page.getAnchorByHref(rule.getURL().toString() + "view/test-nest");
         assertNotNull(html);
-        //X disabeld our search for next search
-        Exception ex = null;
-        html = null;
-        page = null;
-        try {
-            page = wc.search("-rX: .*nest.*");
-            html = page.getAnchorByHref(rule.getURL().toString() + "view/test-nest");
-        } catch (FailingHttpStatusCodeException exx) {
-            ex = exx;
-        }
-        assertNotNull(ex);
+        // X disabled our search for next search
+        assertThrows(FailingHttpStatusCodeException.class, () -> wc.search("-rX: .*nest.*"));
     }
+
 }
