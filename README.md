@@ -23,8 +23,8 @@ Details about the search implementation can be found here: https://jvanek.fedora
 
 The search has its pros and cons.
 It can be enabled/disabled in global/system settings <br>
-![sscreenshot from system settings](https://issues.jenkins.io/secure/attachment/63238/image-2024-09-06-00-17-43-606.png)<br>
-or temorarily by appending `-X:` to the query
+![screenshot from system settings](https://issues.jenkins.io/secure/attachment/63238/image-2024-09-06-00-17-43-606.png)<br>
+or temporarily by appending `-X:` to the query
 
 The search knows logical operators and can search also in builds via display name/comment and showing build details and statistics.
 This plugin supports customizable saving of search history.

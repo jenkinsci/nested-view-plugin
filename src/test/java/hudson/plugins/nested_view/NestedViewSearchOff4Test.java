@@ -23,34 +23,34 @@
  */
 package hudson.plugins.nested_view;
 
-import org.htmlunit.ElementNotFoundException;
 import org.htmlunit.FailingHttpStatusCodeException;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class NestedViewSearchOff4Test {
+@WithJenkins
+class NestedViewSearchOff4Test {
 
-    @Rule
-    public JenkinsRule rule = new JenkinsRule();
+    private JenkinsRule rule;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        this.rule = rule;
+    }
 
     @Test
     @Issue("JENKINS-65924?")
-    public void testSearchWithPrefixOff() throws Exception {
-        WebClient wc = NestedViewTest.createViewAndJobsForNEstedViewSearch(rule);
-        // Perform some searches. ensure extended search is off
-        NestedViewGlobalConfig.getInstance().setNestedViewSearch(false);
-        Exception ex = null;
-        try {
-            NestedViewTest.searchAndCheck4(wc, rule);
-        } catch (FailingHttpStatusCodeException exx) {
-            ex = exx;
+    void testSearchWithPrefixOff() throws Exception {
+        try (WebClient wc = NestedViewTest.createViewAndJobsForNestedViewSearch(rule)) {
+            // Perform some searches. Ensure extended search is off
+            NestedViewGlobalConfig.getInstance().setNestedViewSearch(false);
+            assertThrows(FailingHttpStatusCodeException.class, () -> NestedViewTest.searchAndCheck4(wc, rule));
         }
-        assertNotNull(ex);
     }
 
 }
