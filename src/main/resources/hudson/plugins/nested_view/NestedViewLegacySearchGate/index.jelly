@@ -1,0 +1,12 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
+    <l:layout title="${it.run} ${it.displayName}">
+        <l:main-panel>
+                    <h3>Legacy search, which can be overwritten by nested-view in settings page</h3>
+                    <form action="/search/">
+                        <input type="text" id="q" name="q" value="" size="100" /><br/>
+                        <input type="submit" value="Search"/>
+                    </form>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>
