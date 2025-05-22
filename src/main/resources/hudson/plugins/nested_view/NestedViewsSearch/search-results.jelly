@@ -32,6 +32,10 @@
         </l:side-panel>
         <l:main-panel>
             <j:set var="hits" value="${it.hits}"/>
+            <form action="/search/">
+                <input type="text" id="q" name="q" value="${q}" size="100" /><br/>
+                <input type="submit" value="Search"/>
+            </form>
             <h1>${%Search for} '${q}' returned: ${hits.size()}</h1>
             <ol>
                             <j:forEach var="hit" items="${hits}"> <!-- NestedViewsSearch.NestedViewsSearchResult -->
