@@ -36,8 +36,7 @@ Unfortunately, you cannot search in settings or have undocumented issues in your
 
 ## Performing release
 
-Always test connection before release.
-
-Testing connection: `ssh -T git@github.com`
-
-Release: `mvn release:prepare release:perform`
+Manual releasing is off.
+ * https://www.jenkins.io/doc/developer/publishing/releasing-cd/
+Dont forget to set up labels:
+ * https://github.com/jenkinsci/.github/blob/ce466227c534c42820a597cb8e9cac2f2334920a/.github/release-drafter.yml#L9-L50
