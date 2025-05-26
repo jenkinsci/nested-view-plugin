@@ -1,5 +1,5 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">>
     <j:set var="q" value="${request2.getParameter('q')}"/>
     <j:new var="h" className="hudson.Functions"/>
     <!-- needed for printing title. -->
@@ -32,9 +32,11 @@
         </l:side-panel>
         <l:main-panel>
             <j:set var="hits" value="${it.hits}"/>
-            <form action="/search/">
-                <input type="text" id="q" name="q" value="${q}" size="100" /><br/>
-                <input type="submit" value="Search"/>
+            <form action="/search/" method="get">
+                <f:entry>
+                    <f:textbox name="q" value="${q}" />
+                </f:entry>
+                <f:submit value="${%Search}"/>
             </form>
             <h1>${%Search for} '${q}' returned: ${hits.size()}</h1>
             <ol>
