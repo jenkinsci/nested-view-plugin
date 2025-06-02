@@ -3,7 +3,7 @@
     <l:layout title="${it.run} ${it.displayName}">
         <l:main-panel>
             <h3>Legacy search, which can be overwritten by nested-view in settings page</h3>
-                <form action="/search/" method="get">
+                <form action="${h.searchURL}" method="get">
                     <f:entry>
                         <f:textbox name="q" />  
                     </f:entry>
