@@ -30,7 +30,6 @@ public class NestedViewsSearchFactory extends SearchFactory {
     }
 
     @Override
-    @SuppressFBWarnings(value = {"ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"}, justification = "Well if several users searches in prallel this would be evil")
     public Search createFor(final SearchableModelObject owner) {
         if (NestedViewGlobalConfig.getInstance().isNestedViewSearch()) {
             if (isTmpSkip()) {

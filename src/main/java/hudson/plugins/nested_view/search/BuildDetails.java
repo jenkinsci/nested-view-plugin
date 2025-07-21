@@ -27,7 +27,6 @@ public class BuildDetails {
                 archives > 0 ? run.getArtifactsUpTo(archives) : new ArrayList<Run.Artifact>(0));
     }
 
-    @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "date is not cared")
     public BuildDetails(String prefix, String id, String displayName, String description, Result result, String timeStampString, Date dateTime, List<Run.Artifact> list) {
         this.prefix = prefix;
         this.id = id;

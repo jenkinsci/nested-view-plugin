@@ -29,7 +29,6 @@ public class HistoryItem {
     private final int size;
     private final Date date;
 
-    @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "date is not cared")
     public HistoryItem(String query, int size, Date date) {
         this.query = query;
         this.size = size;

@@ -117,13 +117,11 @@ public class NestedViewsSearch extends Search {
         v.forward(req, rsp);
     }
 
-    @SuppressFBWarnings(value = {"ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"}, justification = "history is shared")
     private void putToHistory(String query, int size, Date date) {
         HistoryItem his = new HistoryItem(query.trim().replaceAll("\\s+", " "), size, date);
         HistoryItem.add(his);
     }
 
-    @SuppressFBWarnings(value = {"ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"}, justification = "history is shared")
     public List getHistory() {
         return HistoryItem.get();
     }
