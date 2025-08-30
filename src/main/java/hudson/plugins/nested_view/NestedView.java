@@ -162,8 +162,8 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     public Item doCreateItem(StaplerRequest2 req, StaplerResponse2 rsp)
             throws IOException, ServletException {
         ItemGroup itemGroup = getItemGroup();
-        if (itemGroup instanceof ModifiableItemGroup) {
-            return ((ModifiableItemGroup) itemGroup).doCreateItem(req, rsp);
+        if (itemGroup instanceof ModifiableItemGroup group) {
+            return group.doCreateItem(req, rsp);
         }
         return null;
     }
@@ -316,8 +316,8 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         List<NestedView> nestedViews = new ArrayList<NestedView>();
 
         for (View v : views) {
-            if (v instanceof NestedView) {
-                nestedViews.add((NestedView) v);
+            if (v instanceof NestedView view) {
+                nestedViews.add(view);
             } else {
                 normalViews.add(v);
             }
@@ -391,9 +391,9 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         boolean found = false;
         Result result = Result.NOT_BUILT, check;
         for (TopLevelItem item : v.getItems()) {
-            if (item instanceof Job && !(  // Skip disabled projects
-                    item instanceof AbstractProject && ((AbstractProject) item).isDisabled())) {
-                final Run lastCompletedBuild = ((Job) item).getLastCompletedBuild();
+            if (item instanceof Job job && !(  // Skip disabled projects
+                    item instanceof AbstractProject project && project.isDisabled())) {
+                final Run lastCompletedBuild = job.getLastCompletedBuild();
                 if (lastCompletedBuild != null) {
                     found = true;
                     check = lastCompletedBuild.getResult();
@@ -420,8 +420,8 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
      * @see #getWorstResultForNormalView(hudson.model.View)
      */
     public static Result getWorstResult(View v) {
-        if (v instanceof NestedView) {
-            return ((NestedView) v).getWorstResult();
+        if (v instanceof NestedView view) {
+            return view.getWorstResult();
         } else {
             return getWorstResultForNormalView(v);
         }
@@ -443,8 +443,8 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         viewsStack.push(this);
         do {
             View currentView = viewsStack.pop();
-            if (currentView instanceof NestedView) {
-                for (View v : ((NestedView) currentView).views) {
+            if (currentView instanceof NestedView view) {
+                for (View v : view.views) {
                     viewsStack.push(v);
                 }
             } else {
@@ -454,8 +454,8 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
 
         HealthReportContainer hrc = new HealthReportContainer();
         for (TopLevelItem item : items) {
-            if (item instanceof Job) {
-                hrc.sum += ((Job) item).getBuildHealth().getScore();
+            if (item instanceof Job job) {
+                hrc.sum += job.getBuildHealth().getScore();
                 hrc.count++;
             }
         }
@@ -539,8 +539,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     private static HealthReportContainer getHealthForNormalView(View view) {
         HealthReportContainer hrc = new HealthReportContainer();
         for (TopLevelItem item : view.getItems()) {
-            if (item instanceof Job) {
-                Job job = (Job) item;
+            if (item instanceof Job job) {
                 if (job.getBuildHealthReports().isEmpty()) continue;
                 hrc.sum += job.getBuildHealth().getScore();
                 hrc.count++;
@@ -559,8 +558,8 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
      * @see #getHealthForNormalView(hudson.model.View)
      */
     public static HealthReportContainer getViewHealth(View v) {
-        if (v instanceof NestedView) {
-            return ((NestedView) v).getHealth();
+        if (v instanceof NestedView view) {
+            return view.getHealth();
         } else {
             return getHealthForNormalView(v);
         }

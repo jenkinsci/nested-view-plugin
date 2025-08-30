@@ -53,8 +53,8 @@ public class NestedViewsSearch extends Search {
             List<NamableWithClass> all = new ArrayList(1000);
             Jenkins j = Jenkins.get();
             for (TopLevelItem ti : j.getItems()) {
-                if (ti instanceof AbstractProject) {
-                    all.add(new NamableWithClass(ti, ti.getName(), ti.getName(), ((AbstractProject<?, ?>) ti).getDescription()));
+                if (ti instanceof AbstractProject<?, ?> project) {
+                    all.add(new NamableWithClass(ti, ti.getName(), ti.getName(), project.getDescription()));
                 }
             }
             addViewsRecursively(j.getViews(), "/", all);
@@ -64,10 +64,9 @@ public class NestedViewsSearch extends Search {
 
     private void addViewsRecursively(Collection<View> views, String s, List<NamableWithClass> all) {
         for (View v : views) {
-            if (v instanceof NestedView) {
-                NestedView nw = (NestedView) v;
+            if (v instanceof NestedView nw) {
                 all.add(new NamableWithClass(v, v.getViewName(), s + v.getViewName(),  nw.getDescription()));
-                addViewsRecursively(((NestedView) v).getViews(), s + v.getViewName() + "/", all);
+                addViewsRecursively(nw.getViews(), s + v.getViewName() + "/", all);
             } else {
                 all.add(new NamableWithClass(v, v.getViewName(), s + v.getViewName(), v.getDescription()));
             }
