@@ -155,8 +155,7 @@ public class ProjectWrapper {
                         break;
                     }
                     Object q = it.next();
-                    if (q instanceof AbstractBuild) {
-                        AbstractBuild b = (AbstractBuild) q;
+                    if (q instanceof AbstractBuild b) {
                         if (i1 > 0) {
                             if (query != null && (query.isSearchByNvr() >= 0 || query.isSearchByBuildComment()>=0)) {
                                 for (String candidate : query.getWithoutArgumentsSplit()) {

@@ -143,8 +143,8 @@ public class NamableWithClass {
     }
 
     public Optional<AbstractProject> getProject() {
-        if (item instanceof AbstractProject) {
-            return Optional.of((AbstractProject) item);
+        if (item instanceof AbstractProject project) {
+            return Optional.of(project);
         } else {
             return Optional.empty();
         }
