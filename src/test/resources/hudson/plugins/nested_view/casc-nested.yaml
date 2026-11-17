@@ -1,0 +1,18 @@
+jenkins:
+  views:
+    - nested:
+        name: "parent"
+        views:
+          - nested:
+              name: "child"
+              views:
+                - list:
+                    name: "grandchild"
+                    jobNames: []
+                    columns:
+                      - "status"
+                      - "jobName"
+                      - "lastSuccess"
+                      - "lastFailure"
+                      - "lastDuration"
+                      - "buildButton"

@@ -1,0 +1,17 @@
+jenkins:
+  views:
+    - nested:
+        name: "nestedView"
+        statusColumns:
+          - "weather"
+        views:
+          - list:
+              name: "listView"
+              jobNames: []
+              columns:
+                - "status"
+                - "jobName"
+                - "lastSuccess"
+                - "lastFailure"
+                - "lastDuration"
+                - "buildButton"

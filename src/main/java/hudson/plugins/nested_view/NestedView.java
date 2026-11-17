@@ -26,10 +26,10 @@ package hudson.plugins.nested_view;
 
 import com.thoughtworks.xstream.converters.ConversionException;
 import com.thoughtworks.xstream.io.StreamException;
+import hudson.util.ListBoxModel;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-
 import javax.xml.XMLConstants;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -48,13 +48,14 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.*;
 import hudson.model.Descriptor.FormException;
-import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.views.ListViewColumn;
 import hudson.views.ViewsTabBar;
 import jenkins.model.Jenkins;
 import jenkins.model.ModelObjectWithContextMenu;
+import net.sf.json.JSONObject;
 import org.apache.commons.jelly.JellyException;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.verb.POST;
@@ -67,6 +68,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static hudson.Util.fixEmpty;
 import java.lang.reflect.Field;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * View type that contains only another set of views.
@@ -95,14 +97,18 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         super(name);
     }
 
-    private Object readResolve() throws Exception {
+    private Object readResolve() throws IllegalAccessException, NoSuchFieldException {
+        setOwners();
+        return this;
+    }
+
+    private void setOwners() throws IllegalAccessException, NoSuchFieldException {
         // Unfortunately various methods which set View.owner are inappropriate here.
         Field ownerF = View.class.getDeclaredField("owner");
         ownerF.setAccessible(true);
         for (View view : views) {
             ownerF.set(view, this);
         }
-        return this;
     }
 
     @Override
@@ -213,14 +219,13 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     }
 
     protected synchronized void submit(StaplerRequest2 req) throws IOException, ServletException, FormException {
-        defaultView = Util.fixEmpty(req.getParameter("defaultView"));
-        if (columns == null) {
-            columns = new NestedViewColumns();
+        JSONObject submittedForm = req.getSubmittedForm();
+        if (!submittedForm.has("statusColumns")) {
+            // If the form doesn't have a "statusColumns" field, it means the user has removed all columns.
+            // We need to set the statusColumns to an empty list in this case.
+            setStatusColumns(List.of());
         }
-        if (columns.getColumns() == null) {
-            columns.setColumns(new DescribableList<ListViewColumn, Descriptor<ListViewColumn>>(this));
-        }
-        columns.updateFromForm(req, req.getSubmittedForm(), "columnsToShow");
+        req.bindJSON(this, submittedForm);
     }
 
     @Override
@@ -255,8 +260,33 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         return isDefault() ? null : getView(defaultView);
     }
 
+    public String getDefaultViewName() {
+        return defaultView;
+    }
+
+    @DataBoundSetter
+    public void setDefaultViewName(String defaultView) {
+        this.defaultView = Util.fixEmpty(defaultView);
+    }
+
     public NestedViewColumns getColumnsToShow() {
         return columns;
+    }
+
+    public Collection<? extends ListViewColumn> getStatusColumns() {
+        return Optional.ofNullable(columns)
+            .map(NestedViewColumns::getColumns)
+            .map(columns -> (List<ListViewColumn>) columns)
+            .orElseGet(List::of);
+    }
+
+    @DataBoundSetter
+    public void setStatusColumns(Collection<? extends ListViewColumn> columns) throws IOException {
+        if (this.columns == null) {
+            this.columns = new NestedViewColumns();
+        }
+        this.columns.initializeColumns(this);
+        this.columns.getColumns().replaceBy(columns == null ? List.of() : columns);
     }
 
     @Override
@@ -286,6 +316,18 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     // Method for testing
     void addView(View view) {
         views.add(view);
+    }
+
+    @DataBoundSetter
+    public void setViews(Collection<View> views) throws IllegalAccessException, NoSuchFieldException {
+        // since this will replace the set of views with a new set, it both creates new views and
+        // deletes old views, so we need to check both CREATE and DELETE permissions for this operation
+        Jenkins.get().checkPermission(View.CREATE);
+        Jenkins.get().checkPermission(View.DELETE);
+
+        this.views.clear();
+        this.views.addAll(views);
+        setOwners();
     }
 
     // Method for testing
@@ -644,10 +686,37 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
     }
 
     @Extension
+    @Symbol({"nested", "nestedView"})
     public static final class DescriptorImpl extends ViewDescriptor {
         public String getDisplayName() {
             return Messages.displayName();
         }
 
+        public List<Descriptor<ListViewColumn>> getStatusColumnsDescriptors() {
+            return NestedViewColumns.getPossibleColumns();
+        }
+
+        @RequirePOST
+        public ListBoxModel doFillDefaultViewNameItems(@AncestorInPath NestedView view) {
+            // this method really only requires READ permissions, but it should only be called from
+            // a view configuration page, which requires CONFIGURE permissions, so we check that instead
+            if (view == null) {
+                // this should never happen, but if it does, we don't want to throw a NullPointerException
+                return new ListBoxModel();
+            }
+
+            view.checkPermission(View.CONFIGURE);
+            ListBoxModel model = new ListBoxModel();
+            model.add(createOption(Messages.noDefaultView(), "", view.getDefaultViewName()));
+            view.getViews().stream()
+                .filter(v -> !(v instanceof NestedView))
+                .map(v -> createOption(v.getDisplayName(), v.getViewName(), view.getDefaultViewName()))
+                .forEach(model::add);
+            return model;
+        }
+
+        private static ListBoxModel.Option createOption(String displayName, String value, String defaultValue) {
+            return new ListBoxModel.Option(displayName, value, Objects.equals(value, defaultValue));
+        }
     }
 }

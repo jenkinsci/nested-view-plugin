@@ -22,32 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <!--<f:checkbox default="false" checked="${it.showWeatherColumn}" title="Show Weather Column" name="showWeatherColumn"/>-->
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
   <j:if test="${!it.isDefault()}">
-  <f:entry title="${%Default subview}" help="/plugin/nested-view/help-defaultView.html">
-    <div class="jenkins-select">
-      <select class="jenkins-select__input" name="defaultView">
-        <j:set var="defaultView" value="${it.defaultView}" />
-        <f:option value="" selected="${defaultView==null}">${%None}</f:option>
-        <j:forEach var="v" items="${it.views}">
-          <j:if test="${v.class.name!='hudson.plugins.nested_view.NestedView'}">
-            <f:option value="${v.viewName}" selected="${defaultView==v}">
-              ${v.viewName}
-            </f:option>
-          </j:if>
-        </j:forEach>
-      </select>
-    </div>
-  </f:entry>
+    <f:entry title="${%Default subview}" field="defaultViewName">
+      <f:select />
+    </f:entry>
   </j:if>
-  <f:section title="${%Columns}">
-    <j:invokeStatic var="allColumns" className="hudson.plugins.nested_view.NestedViewColumns" method="getPossibleColumns"/>
-    <f:block>
-      <f:hetero-list name="columnsToShow" hasHeader="true"
-                     descriptors="${allColumns}"
-                     items="${it.columnsToShow.columns}"
-                     addCaption="${%Add column}"/>
-    </f:block>
-  </f:section>
+  <f:entry title="${%Columns}" field="statusColumns">
+    <f:repeatableHeteroProperty oneEach="true" hasHeader="true"/>
+  </f:entry>
 </j:jelly>

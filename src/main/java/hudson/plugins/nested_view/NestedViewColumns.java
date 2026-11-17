@@ -3,12 +3,12 @@ package hudson.plugins.nested_view;
 import com.google.common.collect.Lists;
 import hudson.DescriptorExtensionList;
 import hudson.model.Descriptor;
+import hudson.model.Saveable;
 import hudson.util.DescribableList;
 import hudson.views.ListViewColumn;
 import hudson.views.ListViewColumnDescriptor;
 import hudson.views.StatusColumn;
 import hudson.views.WeatherColumn;
-import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest2;
 
@@ -23,10 +23,25 @@ import java.util.List;
 public class NestedViewColumns {
     private DescribableList<ListViewColumn, Descriptor<ListViewColumn>> columns;
 
+    /**
+     * @deprecated Handled by {@link StaplerRequest2#bindJSON(Object, JSONObject)} in
+     *   {@link NestedView#submit(StaplerRequest2)} now.
+     */
+    @Deprecated
     public void updateFromForm(StaplerRequest2 req, JSONObject formData, String key) throws IOException, Descriptor.FormException {
         columns.rebuildHetero(req, formData, getPossibleColumns(), key);
     }
 
+    public void initializeColumns(Saveable owner) {
+        if (columns == null) {
+            columns = new DescribableList<>(owner);
+        }
+    }
+
+    /**
+     * @deprecated Use {@link #initializeColumns(Saveable)} instead.
+     */
+    @Deprecated
     public void setColumns(DescribableList<ListViewColumn, Descriptor<ListViewColumn>> columns) {
         this.columns = columns;
     }
@@ -44,7 +59,7 @@ public class NestedViewColumns {
     }
 
     public static List<Descriptor<ListViewColumn>> getPossibleColumns() {
-        return extractOptionalColumns(allViewColumns());
+        return extractOptionalColumns(ListViewColumn.all());
     }
 
     private boolean containsColumnWithDescriptor(Class<? extends ListViewColumnDescriptor> descriptorClass) {
@@ -54,14 +69,6 @@ public class NestedViewColumns {
             }
         }
         return false;
-    }
-
-    private static DescriptorExtensionList<ListViewColumn, Descriptor<ListViewColumn>> allViewColumns() {
-        Jenkins j = Jenkins.getInstance();
-        if (j == null) {
-            throw new IllegalStateException();
-        }
-        return j.getDescriptorList(ListViewColumn.class);
     }
 
     private static List<Descriptor<ListViewColumn>> extractOptionalColumns(

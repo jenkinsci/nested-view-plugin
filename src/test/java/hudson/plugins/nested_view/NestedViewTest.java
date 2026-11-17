@@ -28,11 +28,13 @@ import hudson.model.Cause.UserCause;
 import hudson.model.FreeStyleProject;
 import hudson.model.ListView;
 import hudson.security.csrf.CrumbIssuer;
+import hudson.views.WeatherColumn;
 import jakarta.servlet.ServletRequest;
 import org.htmlunit.FailingHttpStatusCodeException;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.WebRequest;
 import org.htmlunit.html.HtmlAnchor;
+import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlOption;
 import org.htmlunit.html.HtmlPage;
@@ -111,7 +113,7 @@ class NestedViewTest {
             assertNotNull(page.getAnchorByHref("/jenkins/view/test-nest/view/suball/"));
             // Now set a default subview
             form = wc.goTo("view/test-nest/configure").getFormByName("viewConfig");
-            List<HtmlOption> options = form.getSelectByName("defaultView").getOptions();
+            List<HtmlOption> options = form.getSelectByName("_.defaultViewName").getOptions();
             assertEquals("", options.get(0).getValueAttribute());
             assertEquals("suball", options.get(1).getValueAttribute());
             assertEquals("subview", options.get(2).getValueAttribute());
@@ -283,6 +285,49 @@ class NestedViewTest {
         view.addView(subview);
         subview.add(project);
         assertTrue(subview.contains(project), "Subview 'listView' should contains item 'project'");
+    }
+
+    @Test
+    void removingAllColumnsInUiRemovesAllColumns() throws Exception {
+        NestedView view = new NestedView("nested");
+        view.setOwner(rule.jenkins);
+        rule.jenkins.addView(view);
+
+        try (WebClient wc = rule.createWebClient()) {
+            HtmlForm form = wc.goTo("view/nested/configure").getFormByName("viewConfig");
+            List<HtmlElement> buttons = form.getElements(e ->
+                "button".equals(e.getTagName())
+                    && e.getAttribute("class").contains("hetero-list-add")
+                    && "statusColumns".equals(e.getAttribute("suffix")));
+            for (HtmlElement button : buttons) {
+                button.click();
+            }
+            List<HtmlElement> columns = form.getElements(e ->
+                "button".equals(e.getTagName())
+                    && e.getAttribute("class").contains("jenkins-dropdown__item")
+                    && e.getTextContent().contains("Weather"));
+            for (HtmlElement column : columns) {
+                column.click();
+            }
+            rule.submit(form);
+
+            view = (NestedView) rule.jenkins.getView("nested");
+            assertNotNull(view);
+            assertEquals(1, view.getStatusColumns().size(), "Should have one column");
+            assertTrue(view.getColumnsToShow().isShowWeatherColumn(), "Should have Weather column");
+
+            form = wc.goTo("view/nested/configure").getFormByName("viewConfig");
+            List<HtmlElement> elements = form.getElementsByAttribute("div", "descriptorid", "hudson.views.WeatherColumn");
+            for (HtmlElement e : elements) {
+                // should only be one WeatherColumn, but just in case, remove all of them
+                e.getElementsByTagName("button").get(0).click();
+            }
+            rule.submit(form);
+        }
+
+        view = (NestedView) rule.jenkins.getView("nested");
+        assertNotNull(view);
+        assertEquals(0, view.getStatusColumns().size(), "All columns should be removed");
     }
 
     static WebClient createViewAndJobsForNestedViewSearch(JenkinsRule rule) throws Exception {
