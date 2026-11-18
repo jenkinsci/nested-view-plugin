@@ -57,6 +57,7 @@ import jenkins.model.ModelObjectWithContextMenu;
 import org.apache.commons.jelly.JellyException;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.verb.POST;
 import hudson.security.Permission;
 
 import jakarta.servlet.ServletException;
@@ -274,6 +275,7 @@ public class NestedView extends View implements ViewGroup, StaplerProxy, ModelOb
         }
     }
 
+    @POST
     public void doCreateView(StaplerRequest2 req, StaplerResponse2 rsp)
             throws IOException, ServletException, FormException {
         checkPermission(View.CREATE);
