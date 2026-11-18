@@ -75,7 +75,7 @@ THE SOFTWARE.
                 <t:buildHealth job="${it.getViewHealth(v)}" td="true"/>
               </j:if>
               <td>
-                <a href="${rootURL}/${v.url}">${v.viewName}</a>
+                <a href="${rootURL}/${v.url}">${v.displayName}</a>
               </td>
             </tr>
           </j:forEach>
