@@ -309,6 +309,8 @@ class NestedViewTest {
             for (HtmlElement column : columns) {
                 column.click();
             }
+            // the new column is inserted asynchronously
+            wc.waitForBackgroundJavaScript(5000);
             rule.submit(form);
 
             view = (NestedView) rule.jenkins.getView("nested");
@@ -322,6 +324,8 @@ class NestedViewTest {
                 // should only be one WeatherColumn, but just in case, remove all of them
                 e.getElementsByTagName("button").get(0).click();
             }
+            // the column is removed asynchronously
+            wc.waitForBackgroundJavaScript(5000);
             rule.submit(form);
         }
 
